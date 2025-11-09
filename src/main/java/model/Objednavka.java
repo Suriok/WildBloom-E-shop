@@ -54,19 +54,75 @@ public class Objednavka {
         if (celkovaCena == null) celkovaCena = BigDecimal.ZERO;
     }
 
-    public Long getObjednavkaId() { return objednavkaId; }
-    public Date getDatum() { return datum; }
-    public StavObjednavky getStav() { return stav; }
-    public void setStav(StavObjednavky stav) { this.stav = stav; }
-    public BigDecimal getCelkovaCena() { return celkovaCena; }
-    public void setCelkovaCena(BigDecimal celkovaCena) { this.celkovaCena = celkovaCena; }
-    public BigDecimal getDph() { return dph; }
-    public void setDph(BigDecimal dph) { this.dph = dph; }
-    public BigDecimal getSleva() { return sleva; }
-    public void setSleva(BigDecimal sleva) { this.sleva = sleva; }
-    public BigDecimal getDoprava() { return doprava; }
-    public void setDoprava(BigDecimal doprava) { this.doprava = doprava; }
-    public Zakaznik getZakaznik() { return zakaznik; }
-    public void setZakaznik(Zakaznik zakaznik) { this.zakaznik = zakaznik; }
-    public List<PolozkaObjednavky> getPolozky() { return polozky; }
+    public Long getObjednavkaId() {
+        return objednavkaId;
+    }
+
+    public void setObjednavkaId(Long objednavkaId) {
+        this.objednavkaId = objednavkaId;
+    }
+
+    public Date getDatum() {
+        return datum;
+    }
+
+    public void setDatum(Date datum) {
+        this.datum = datum;
+    }
+
+    public StavObjednavky getStav() {
+        return stav;
+    }
+
+    public void setStav(StavObjednavky stav) {
+        this.stav = stav;
+    }
+
+    public BigDecimal getCelkovaCena() {
+        return celkovaCena;
+    }
+
+    public void setCelkovaCena(BigDecimal celkovaCena) {
+        this.celkovaCena = celkovaCena;
+    }
+
+    public BigDecimal getDph() {
+        return dph;
+    }
+
+    public void setDph(BigDecimal dph) {
+        this.dph = dph;
+    }
+
+    public BigDecimal getSleva() {
+        return sleva;
+    }
+
+    public void setSleva(BigDecimal sleva) {
+        this.sleva = sleva;
+    }
+
+    public BigDecimal getDoprava() {
+        return doprava;
+    }
+
+    public void setDoprava(BigDecimal doprava) {
+        this.doprava = doprava;
+    }
+
+    public Zakaznik getZakaznik() {
+        return zakaznik;
+    }
+
+    public void setZakaznik(Zakaznik zakaznik) {
+        this.zakaznik = zakaznik;
+    }
+
+    public List<PolozkaObjednavky> getPolozky() {
+        return polozky;
+    }
+
+    public void setPolozky(List<PolozkaObjednavky> polozky) {
+        this.polozky = polozky;
+    }
 }

@@ -17,7 +17,7 @@ public abstract class Uzivatel {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false)          // хранить хеш
+    @Column(nullable = false)
     private String heslo;
 
     private String adresa;
@@ -29,6 +29,7 @@ public abstract class Uzivatel {
     protected Uzivatel() {}
 
     public Long getId() { return id; }
+    public void setId(Long id) {this.id = id;}
     public String getJmeno() { return jmeno; }
     public void setJmeno(String jmeno) { this.jmeno = jmeno; }
     public String getTelefon() { return telefon; }

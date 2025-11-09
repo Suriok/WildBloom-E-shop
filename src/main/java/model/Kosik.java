@@ -30,7 +30,7 @@ public class Kosik {
     private Zakaznik zakaznik;
 
     @OneToMany(mappedBy = "kosik", cascade = CascadeType.ALL, orphanRemoval = true)
-    @OrderBy("createdAt ASC")           // “позиции упорядочены по дате добавления”
+    @OrderBy("createdAt ASC")
     private List<PolozkaKosiku> polozky = new ArrayList<>();
 
     public Kosik() {}
@@ -41,11 +41,43 @@ public class Kosik {
         if (celkovaSuma == null) celkovaSuma = BigDecimal.ZERO;
     }
 
-    public Long getKosikId() { return kosikId; }
-    public Date getDatumVzniku() { return datumVzniku; }
-    public BigDecimal getCelkovaSuma() { return celkovaSuma; }
-    public void setCelkovaSuma(BigDecimal celkovaSuma) { this.celkovaSuma = celkovaSuma; }
-    public Zakaznik getZakaznik() { return zakaznik; }
-    public void setZakaznik(Zakaznik zakaznik) { this.zakaznik = zakaznik; }
-    public List<PolozkaKosiku> getPolozky() { return polozky; }
+    public Long getKosikId() {
+        return kosikId;
+    }
+
+    public void setKosikId(Long kosikId) {
+        this.kosikId = kosikId;
+    }
+
+    public Date getDatumVzniku() {
+        return datumVzniku;
+    }
+
+    public void setDatumVzniku(Date datumVzniku) {
+        this.datumVzniku = datumVzniku;
+    }
+
+    public BigDecimal getCelkovaSuma() {
+        return celkovaSuma;
+    }
+
+    public void setCelkovaSuma(BigDecimal celkovaSuma) {
+        this.celkovaSuma = celkovaSuma;
+    }
+
+    public Zakaznik getZakaznik() {
+        return zakaznik;
+    }
+
+    public void setZakaznik(Zakaznik zakaznik) {
+        this.zakaznik = zakaznik;
+    }
+
+    public List<PolozkaKosiku> getPolozky() {
+        return polozky;
+    }
+
+    public void setPolozky(List<PolozkaKosiku> polozky) {
+        this.polozky = polozky;
+    }
 }
