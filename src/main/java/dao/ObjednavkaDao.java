@@ -51,3 +51,4 @@ public class ObjednavkaDao extends BaseDao<Objednavka> {
 
 
 
+

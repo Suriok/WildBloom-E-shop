@@ -42,3 +42,4 @@ public abstract class BaseDao<T> {
         em.remove(em.contains(entity) ? entity : em.merge(entity));
     }
 }
+

@@ -36,3 +36,4 @@ public class PolozkaObjednavkyDao extends BaseDao<PolozkaObjednavky> {
         return cnt != null && cnt > 0;
     }
 }
+

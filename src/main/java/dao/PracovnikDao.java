@@ -7,3 +7,4 @@ import org.springframework.stereotype.Repository;
 public class PracovnikDao extends BaseDao<Pracovnik> {
     public PracovnikDao() { super(Pracovnik.class); }
 }
+

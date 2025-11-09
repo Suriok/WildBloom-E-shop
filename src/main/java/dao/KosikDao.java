@@ -35,4 +35,6 @@ public class KosikDao extends BaseDao<Kosik> {
             return null;
         }
     }
+
+
 }

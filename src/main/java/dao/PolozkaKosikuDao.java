@@ -24,4 +24,5 @@ public class PolozkaKosikuDao extends BaseDao<PolozkaKosiku> {
             return null;
         }
     }
+
 }

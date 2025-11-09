@@ -20,3 +20,5 @@ public class KategorieDao extends BaseDao<Kategorie> {
         }
     }
 }
+
+

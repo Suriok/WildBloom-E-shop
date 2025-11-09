@@ -7,3 +7,4 @@ import org.springframework.stereotype.Repository;
 public class AdministratorDao extends BaseDao<Administrator> {
     public AdministratorDao() { super(Administrator.class); }
 }
+
