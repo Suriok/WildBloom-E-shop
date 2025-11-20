@@ -23,23 +23,42 @@ public abstract class BaseDao<T> {
     }
 
     public List<T> findAll() {
-        return em.createQuery("SELECT e FROM " + type.getSimpleName() + " e", type)
-                .getResultList();
+        try {
+            return em.createQuery("SELECT e FROM " + type.getSimpleName() + " e", type)
+                    .getResultList();
+        } catch (RuntimeException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
     public void persist(T entity) {
         Objects.requireNonNull(entity);
-        em.persist(entity);
+        try {
+            em.persist(entity);
+        }catch (RuntimeException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public T update(T entity) {
         Objects.requireNonNull(entity);
-        return em.merge(entity);
+        try{
+            return em.merge(entity);
+        } catch (RuntimeException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void remove(T entity) {
         Objects.requireNonNull(entity);
-        em.remove(em.contains(entity) ? entity : em.merge(entity));
+        try{
+            em.remove(em.contains(entity) ? entity : em.merge(entity));
+        } catch (RuntimeException e) {
+            throw new RuntimeException(e);
+        }
+
+
     }
 }
 
