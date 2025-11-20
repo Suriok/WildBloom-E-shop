@@ -1,13 +1,13 @@
 package service;
 
-import dao.KosikDao;
-import dao.PolozkaKosikuDao;
-import dao.ProduktDao;
-import dao.ZakaznikDao;
-import model.Kosik;
-import model.PolozkaKosiku;
-import model.Produkt;
-import model.Zakaznik;
+import dao.CartDao;
+import dao.CartItemDao;
+import dao.ProductDao;
+import dao.CustomerDao;
+import model.Cart;
+import model.CartItem;
+import model.Customer;
+import model.Product;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,136 +20,136 @@ import static java.util.Objects.requireNonNull;
 @Service
 public class CartService {
 
-    private final ZakaznikDao zakaznikDao;
-    private final KosikDao kosikDao;
-    private final ProduktDao produktDao;
-    private final PolozkaKosikuDao polozkaKosikuDao;
+    private final CustomerDao customerDao;
+    private final CartDao cartDao;
+    private final ProductDao productDao;
+    private final CartItemDao cartItemDao;
 
-    public CartService(ZakaznikDao zakaznikDao, KosikDao kosikDao, ProduktDao produktDao, PolozkaKosikuDao polozkaKosikuDao) {
-        this.zakaznikDao = zakaznikDao;
-        this.kosikDao = kosikDao;
-        this.produktDao = produktDao;
-        this.polozkaKosikuDao = polozkaKosikuDao;
+    public CartService(CustomerDao customerDao, CartDao cartDao, ProductDao productDao, CartItemDao cartItemDao) {
+        this.customerDao = customerDao;
+        this.cartDao = cartDao;
+        this.productDao = productDao;
+        this.cartItemDao = cartItemDao;
     }
 
     @Transactional
-    public Kosik addItem(Long zakaznikId, Long produktId, int mnozstvi) {
-        if (mnozstvi <= 0){
+    public Cart addItem(Long customerId, Long productId, int amount) {
+        if (amount <= 0){
             throw new IllegalArgumentException("Množství musí být > 0");
         }
-        final Zakaznik z = ensureZakaznik(zakaznikId);
-        Kosik k = kosikDao.findByZakaznikWithItems(z.getId());
+        final Customer z = ensureCustomer(customerId);
+        Cart k = cartDao.findByCustomerWithItems(z.getId());
         if (k == null){
-            k = ensureKosik(z);
+            k = ensureCart(z);
         }
 
-        final Produkt p = ensureProdukt(produktId);
+        final Product p = ensureproduct(productId);
 
-        PolozkaKosiku pk = polozkaKosikuDao.findByKosikAndProdukt(k, p);
+        CartItem pk = cartItemDao.findByCartAndProduct(k, p);
         if (pk == null) {
-            pk = new PolozkaKosiku();
-            pk.setKosik(k);
-            pk.setProdukt(p);
-            pk.setMnozstvi(mnozstvi);
-            polozkaKosikuDao.persist(pk);
-            k.getPolozky().add(pk);
+            pk = new CartItem();
+            pk.setCart(k);
+            pk.setproduct(p);
+            pk.setamount(amount);
+            cartItemDao.persist(pk);
+            k.getitem().add(pk);
         } else {
-            pk.setMnozstvi(pk.getMnozstvi() + mnozstvi);
-            polozkaKosikuDao.update(pk);
+            pk.setamount(pk.getamount() + amount);
+            cartItemDao.update(pk);
         }
         recalculateCartTotal(k);
-        kosikDao.update(k);
+        cartDao.update(k);
         return k;
     }
 
     @Transactional
-    public Kosik updateItemQuantity(Long zakaznikId, Long produktId, int newQty) {
+    public Cart updateItemQuantity(Long customerId, Long productId, int newQty) {
         if (newQty < 0){
-            throw new IllegalArgumentException("Množství musí být ≥ 0");
+            throw new IllegalArgumentException("Amount must be > 0");
         }
-        final Zakaznik z = ensureZakaznik(zakaznikId);
-        final Kosik k = ensureKosikFor(z);
-        final Produkt p = ensureProdukt(produktId);
+        final Customer z = ensureCustomer(customerId);
+        final Cart k = ensureCartFor(z);
+        final Product p = ensureproduct(productId);
 
-        PolozkaKosiku pk = polozkaKosikuDao.findByKosikAndProdukt(k, p);
+        CartItem pk = cartItemDao.findByCartAndProduct(k, p);
         if (pk == null){
-            throw new NoSuchElementException("Položka košíku nenalezena");
+            throw new NoSuchElementException("Cart item not found");
         }
 
         if (newQty == 0) {
-            k.getPolozky().remove(pk);
-            polozkaKosikuDao.remove(pk);
+            k.getitem().remove(pk);
+            cartItemDao.remove(pk);
         } else {
-            pk.setMnozstvi(newQty);
-            polozkaKosikuDao.update(pk);
+            pk.setamount(newQty);
+            cartItemDao.update(pk);
         }
         recalculateCartTotal(k);
-        kosikDao.update(k);
+        cartDao.update(k);
         return k;
     }
 
     @Transactional
-    public Kosik removeItem(Long zakaznikId, Long produktId) {
-        final Zakaznik z = ensureZakaznik(zakaznikId);
-        final Kosik k = ensureKosikFor(z);
-        final Produkt p = ensureProdukt(produktId);
+    public Cart removeItem(Long customerId, Long productId) {
+        final Customer z = ensureCustomer(customerId);
+        final Cart k = ensureCartFor(z);
+        final Product p = ensureproduct(productId);
 
-        PolozkaKosiku pk = polozkaKosikuDao.findByKosikAndProdukt(k, p);
+        CartItem pk = cartItemDao.findByCartAndProduct(k, p);
         if (pk != null) {
-            k.getPolozky().remove(pk);
-            polozkaKosikuDao.remove(pk);
+            k.getitem().remove(pk);
+            cartItemDao.remove(pk);
             recalculateCartTotal(k);
-            kosikDao.update(k);
+            cartDao.update(k);
         }
         return k;
     }
 
     // helpers
-    private Zakaznik ensureZakaznik(Long id) {
-        Zakaznik z = zakaznikDao.find(requireNonNull(id));
+    private Customer ensureCustomer(Long id) {
+        Customer z = customerDao.find(requireNonNull(id));
         if (z == null){
-            throw new NoSuchElementException("Zákazník nenalezen");
+            throw new NoSuchElementException("Customer not found");
         }
         return z;
     }
 
-    private Kosik ensureKosik(Zakaznik z) {
-        Kosik k = z.getKosik();
+    private Cart ensureCart(Customer z) {
+        Cart k = z.getCart();
         if (k == null) {
-            k = new Kosik();
-            k.setZakaznik(z);
-            kosikDao.persist(k);
-            z.setKosik(k);
-            zakaznikDao.update(z);
+            k = new Cart();
+            k.setCustomer(z);
+            cartDao.persist(k);
+            z.setCart(k);
+            customerDao.update(z);
         }
         return k;
     }
 
-    private Kosik ensureKosikFor(Zakaznik z) {
-        Kosik k = kosikDao.findByZakaznikWithItems(z.getId());
+    private Cart ensureCartFor(Customer z) {
+        Cart k = cartDao.findByCustomerWithItems(z.getId());
         if (k == null){
-            k = ensureKosik(z);
+            k = ensureCart(z);
         }
         return k;
     }
 
-    private Produkt ensureProdukt(Long produktId) {
-        Produkt p = produktDao.find(requireNonNull(produktId));
+    private Product ensureproduct(Long productId) {
+        Product p = productDao.find(requireNonNull(productId));
         if (p == null){
-            throw new NoSuchElementException("Produkt nenalezen");
+            throw new NoSuchElementException("Product not found");
         }
         return p;
     }
 
-    private void recalculateCartTotal(Kosik k) {
+    private void recalculateCartTotal(Cart k) {
         BigDecimal sum = BigDecimal.ZERO;
-        for (PolozkaKosiku it : k.getPolozky()) {
-            BigDecimal price = it.getProdukt().getCena();
+        for (CartItem it : k.getitem()) {
+            BigDecimal price = it.getproduct().getPrice();
             if (price == null){
                 price = BigDecimal.ZERO;
             }
-            sum = sum.add(price.multiply(BigDecimal.valueOf(it.getMnozstvi())));
+            sum = sum.add(price.multiply(BigDecimal.valueOf(it.getamount())));
         }
-        k.setCelkovaSuma(sum.setScale(2, RoundingMode.HALF_UP));
+        k.settotalAmount(sum.setScale(2, RoundingMode.HALF_UP));
     }
 }

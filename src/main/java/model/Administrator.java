@@ -4,12 +4,12 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "administrator")
-public class Administrator extends Uzivatel {
+public class Administrator extends User {
 
-    private String prava;
+    private String rights;
 
     public Administrator() {}
 
-    public String getPrava() { return prava; }
-    public void setPrava(String prava) { this.prava = prava; }
+    public String getrights() { return rights; }
+    public void setrights(String rights) { this.rights = rights; }
 }
