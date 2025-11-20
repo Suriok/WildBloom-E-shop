@@ -1,19 +1,19 @@
 package dao;
 
 import jakarta.persistence.NoResultException;
-import model.Uzivatel;
+import model.User;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public class UzivatelDao extends BaseDao<Uzivatel> {
+public class UserDao extends BaseDao<User> {
 
-    public UzivatelDao() {
-        super(Uzivatel.class);
+    public UserDao() {
+        super(User.class);
     }
 
-    public Uzivatel findByEmail(String email) {
+    public User findByEmail(String email) {
         try {
-            return em.createQuery("SELECT u FROM Uzivatel u WHERE u.email = :email", Uzivatel.class)
+            return em.createQuery("SELECT u FROM User u WHERE u.email = :email", User.class)
                     .setParameter("email", email)
                     .getSingleResult();
         } catch (NoResultException e) {
@@ -22,7 +22,7 @@ public class UzivatelDao extends BaseDao<Uzivatel> {
     }
 
     public boolean existsByEmail(String email) {
-        Long cnt = em.createQuery("SELECT COUNT(u) FROM Uzivatel u WHERE u.email = :email", Long.class)
+        Long cnt = em.createQuery("SELECT COUNT(u) FROM User u WHERE u.email = :email", Long.class)
                 .setParameter("email", email)
                 .getSingleResult();
         return cnt != null && cnt > 0;
