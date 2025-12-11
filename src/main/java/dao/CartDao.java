@@ -1,6 +1,8 @@
 package dao;
 
 import jakarta.persistence.NoResultException;
+import jakarta.persistence.PersistenceException;
+import dao.exception.DaoException;
 import model.Cart;
 import model.Customer;
 import org.springframework.stereotype.Repository;
@@ -17,6 +19,8 @@ public class CartDao extends BaseDao<Cart> {
                     .getSingleResult();
         } catch (NoResultException e) {
             return null;
+        }catch (PersistenceException e) {
+            throw new DaoException("Error finding cart for customer" + customer, e);
         }
     }
 
@@ -33,6 +37,8 @@ public class CartDao extends BaseDao<Cart> {
                     .getSingleResult();
         } catch (NoResultException e) {
             return null;
+        } catch (PersistenceException e) {
+            throw new DaoException("Error loading cart with items for customer id " + customerId, e);
         }
     }
 
