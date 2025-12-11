@@ -1,6 +1,8 @@
 package dao;
 
 import jakarta.persistence.NoResultException;
+import jakarta.persistence.PersistenceException;
+import dao.exception.DaoException;
 import model.Order;
 import model.OrderItem;
 import model.Product;
@@ -22,10 +24,13 @@ public class OrderItemDao extends BaseDao<OrderItem> {
                     .getSingleResult();
         } catch (NoResultException e) {
             return null;
+        }catch (PersistenceException e) {
+            throw new DaoException("Error finding order item.", e);
         }
     }
 
     public boolean existsByOrderAndProduct(Order order, Product product) {
+        try{
         Long cnt = em.createQuery("""
                 SELECT COUNT(po) FROM OrderItem po
                 WHERE po.order = :o AND po.product = :p
@@ -34,6 +39,9 @@ public class OrderItemDao extends BaseDao<OrderItem> {
                 .setParameter("p", product)
                 .getSingleResult();
         return cnt != null && cnt > 0;
+        }catch (PersistenceException e) {
+            throw new DaoException("Error checking existence of order item.", e);
+        }
     }
 }
 

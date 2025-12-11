@@ -1,6 +1,8 @@
 package dao;
 
 import jakarta.persistence.NoResultException;
+import jakarta.persistence.PersistenceException;
+import dao.exception.DaoException;
 import model.Order;
 import model.OrderStatus;
 import org.springframework.stereotype.Repository;
@@ -13,23 +15,32 @@ public class OrderDao extends BaseDao<Order> {
     public OrderDao() { super(Order.class); }
 
     public List<Order> findByStatusOrderByDateAsc(OrderStatus status) {
-        return em.createQuery("""
+        try{
+            return em.createQuery("""
                 SELECT o FROM Order o
                 WHERE o.status = :status
                 ORDER BY o.date ASC
                 """, Order.class)
                 .setParameter("status", status)
                 .getResultList();
+        }catch (PersistenceException e) {
+            throw new DaoException("Error finding orders by status " + status, e);
+        }
     }
 
     public List<Order> findBycustomerId(Long customerId) {
-        return em.createQuery("""
-                SELECT o FROM Order o
+        try {
+            return em.createQuery("""
+                
+                            SELECT o FROM Order o
                 WHERE o.customer.id = :customerId
                 ORDER BY o.date DESC
                 """, Order.class)
                 .setParameter("customerId", customerId)
                 .getResultList();
+        }catch (PersistenceException e) {
+            throw new DaoException("Error finding orders by customerId " + customerId, e);
+        }
     }
 
     public Order findByIdWithItems(Long orderId) {
@@ -45,6 +56,8 @@ public class OrderDao extends BaseDao<Order> {
                     .getSingleResult();
         } catch (NoResultException e) {
             return null;
+        }catch (PersistenceException e) {
+            throw new DaoException("Error finding orders by id " + orderId, e);
         }
     }
 }

@@ -1,6 +1,8 @@
 package dao;
 
 import jakarta.persistence.NoResultException;
+import jakarta.persistence.PersistenceException;
+import dao.exception.DaoException;
 import model.Cart;
 import model.CartItem;
 import model.Product;
@@ -22,6 +24,8 @@ public class CartItemDao extends BaseDao<CartItem> {
                     .getSingleResult();
         } catch (NoResultException e) {
             return null;
+        }catch (PersistenceException e) {
+            throw new DaoException("Error finding cart item by cart and product", e);
         }
     }
 

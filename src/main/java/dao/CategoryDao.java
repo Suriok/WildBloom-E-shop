@@ -1,6 +1,8 @@
 package dao;
 
 import jakarta.persistence.NoResultException;
+import jakarta.persistence.PersistenceException;
+import dao.exception.DaoException;
 import model.Category;
 import org.springframework.stereotype.Repository;
 
@@ -17,6 +19,8 @@ public class CategoryDao extends BaseDao<Category> {
                     .getSingleResult();
         } catch (NoResultException e) {
             return null;
+        }catch (PersistenceException e) {
+            throw new DaoException("Error finding category by name: " + name, e);
         }
     }
 }
