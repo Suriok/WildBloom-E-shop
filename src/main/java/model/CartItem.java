@@ -39,7 +39,7 @@ public class CartItem {
         if (createdAt == null) createdAt = new Date();
     }
 
-    public Long getId() { return id; }
+    public Long getCartItemId() { return id; }
     public Cart getCart() { return cart; }
     public void setCart(Cart cart) { this.cart = cart; }
     public Product getproduct() { return product; }

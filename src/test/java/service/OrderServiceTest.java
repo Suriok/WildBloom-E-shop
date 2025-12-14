@@ -38,7 +38,7 @@ public class OrderServiceTest {
     @BeforeEach
     void setUp() {
         testCustomer = new Customer();
-        testCustomer.setId(1L);
+        testCustomer.setUserId(1L);
         testCustomer.setEmail("customer@test.com");
         testCustomer.setName("John Doe");
         testCustomer.setPassword("password");
@@ -84,7 +84,7 @@ public class OrderServiceTest {
         CartItem item = new CartItem();
         item.setproduct(testProduct1);
         item.setamount(20);
-        testCart.getitem().add(item);
+        testCart.getCartItemIdtem().add(item);
         when(customerDao.find(1L)).thenReturn(testCustomer);
         when(cartDao.findByCustomerWithItems(1L)).thenReturn(testCart);
         assertThrows(IllegalStateException.class, () -> orderService.createOrderFromCart(1L));
@@ -157,7 +157,7 @@ public class OrderServiceTest {
     @Test
     void cancelOrder_WithOrderNotBelongingToCustomer_ShouldThrow() {
         Customer otherCustomer = new Customer();
-        otherCustomer.setId(2L);
+        otherCustomer.setUserId(2L);
         Order order = new Order();
         order.setorderId(10L);
         order.setCustomer(otherCustomer);

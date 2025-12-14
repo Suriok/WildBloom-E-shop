@@ -33,7 +33,7 @@ public class OrderItem {
 
     public OrderItem() {}
 
-    public Long getId() { return id; }
+    public Long getOrederItemId() { return id; }
 
     public Order getOrder() { return order; }
     public void setOrder(Order order) { this.order = order; }

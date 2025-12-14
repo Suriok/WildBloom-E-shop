@@ -4,6 +4,7 @@ import dao.*;
 import model.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import jakarta.annotation.security.RolesAllowed;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -41,9 +42,10 @@ public class OrderService {
     }
 
     @Transactional
+    @RolesAllowed("ROLE_ZAKAZNIK")
     public Order createOrderFromCart(Long customerId) {
         final Customer z = ensureCustomer(customerId);
-        final Cart k = ensureCartWithItems(z.getId());
+        final Cart k = ensureCartWithItems(z.getUserId());
         if (k.getitem().isEmpty()){
             throw new IllegalStateException("Cart is empty");
         }
@@ -94,13 +96,14 @@ public class OrderService {
     }
 
     @Transactional
+    @RolesAllowed({"ROLE_ZAKAZNIK", "ROLE_ADMINISTRATOR"})
     public void cancelOrder(Long customerId, Long orderId) {
         final Customer z = ensureCustomer(customerId);
         Order o = orderDao.find(requireNonNull(orderId));
         if (o == null){
             throw new NoSuchElementException("Order not found");
         }
-        if (!o.getCustomer().getId().equals(z.getId())) {
+        if (!o.getCustomer().getUserId().equals(z.getUserId())) {
             throw new IllegalStateException("Order does not belong to user");
         }
         if (!(o.getstatus() == OrderStatus.WAITING_FOR_CONFIRMATION || o.getstatus() == OrderStatus.CONFIRMED)) {
@@ -121,6 +124,7 @@ public class OrderService {
     }
 
     @Transactional
+    @RolesAllowed({"ROLE_PRACOVNIK", "ROLE_ADMINISTRATOR"})
     public Order changeStatus(Long orderId, OrderStatus newStatus) {
         Order o = orderDao.find(requireNonNull(orderId));
         if (o == null){
