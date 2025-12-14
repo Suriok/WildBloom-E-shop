@@ -38,12 +38,16 @@ public class CartService {
             throw new IllegalArgumentException("Množství musí být > 0");
         }
         final Customer z = ensureCustomer(customerId);
-        Cart k = cartDao.findByCustomerWithItems(z.getId());
+        Cart k = cartDao.findByCustomerWithItems(z.getUserId());
         if (k == null){
             k = ensureCart(z);
         }
 
         final Product p = ensureproduct(productId);
+
+        if (p.getIn_stock() < amount) {
+            throw new IllegalStateException("Nedostatek zboží na skladě. Dostupné: " + p.getIn_stock());
+        }
 
         CartItem pk = cartItemDao.findByCartAndProduct(k, p);
         if (pk == null) {
@@ -126,7 +130,7 @@ public class CartService {
     }
 
     private Cart ensureCartFor(Customer z) {
-        Cart k = cartDao.findByCustomerWithItems(z.getId());
+        Cart k = cartDao.findByCustomerWithItems(z.getUserId());
         if (k == null){
             k = ensureCart(z);
         }

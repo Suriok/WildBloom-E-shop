@@ -38,11 +38,11 @@ public class CartServiceTest {
     @BeforeEach
     void setUp() {
         testCustomer = new Customer();
-        testCustomer.setId(1L);
+        testCustomer.setUserId(1L);
         testCustomer.setEmail("test@test.com");
         testCustomer.setName("Test User");
         testCustomer.setPassword("password");
-        testCustomer.setRole(UserRole.Customer);
+        testCustomer.setRole(UserRole.CUSTOMER);
         testCustomer.setdateRegistrace(new Date());
 
         testCart = new Cart();
@@ -110,7 +110,7 @@ public class CartServiceTest {
     @Test
     void addItem_CreateNewCart_WhenCustomerHasNoCart() {
         Customer customerNoCart = new Customer();
-        customerNoCart.setId(2L);
+        customerNoCart.setUserId(2L);
         customerNoCart.setCart(null);
         when(customerDao.find(2L)).thenReturn(customerNoCart);
         when(cartDao.findByCustomerWithItems(2L)).thenReturn(null);
