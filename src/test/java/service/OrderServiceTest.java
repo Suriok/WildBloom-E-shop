@@ -62,7 +62,7 @@ public class OrderServiceTest {
         testProduct2.setproductId(2L);
         testProduct2.setPrice(new BigDecimal("50.00"));
         testProduct2.setname("Product B");
-        testProduct2.setIn_stock(5);
+        testProduct2.setIn_stock(10);
         testProduct2.setAvailability(true);
     }
 
@@ -83,8 +83,8 @@ public class OrderServiceTest {
     void createOrderFromCart_WithInsufficientStock_ShouldThrow() {
         CartItem item = new CartItem();
         item.setproduct(testProduct1);
-        item.setamount(20);
-        testCart.getCartItemIdtem().add(item);
+        item.setamount(20); // Пытаемся купить 20, а на складе 10 (см. setUp)
+        testCart.getitem().add(item);
         when(customerDao.find(1L)).thenReturn(testCustomer);
         when(cartDao.findByCustomerWithItems(1L)).thenReturn(testCart);
         assertThrows(IllegalStateException.class, () -> orderService.createOrderFromCart(1L));
@@ -229,8 +229,6 @@ public class OrderServiceTest {
         assertThrows(IllegalStateException.class,
                 () -> orderService.changeStatus(10L, OrderStatus.DELIVERED));
     }
-
-
 
     @Test
     void changeStatus_AllowedTransitions_FromConfirmed() {
