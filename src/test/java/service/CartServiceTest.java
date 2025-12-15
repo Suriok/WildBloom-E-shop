@@ -56,16 +56,22 @@ public class CartServiceTest {
         testProduct1.setproductId(1L);
         testProduct1.setPrice(new BigDecimal("100.00"));
         testProduct1.setname("Product 1");
+        testProduct1.setIn_stock(100);
+        testProduct1.setAvailability(true);
 
         testProduct2 = new Product();
         testProduct2.setproductId(2L);
         testProduct2.setPrice(new BigDecimal("50.00"));
         testProduct2.setname("Product 2");
+        testProduct2.setIn_stock(50);
+        testProduct2.setAvailability(true);
 
         testProduct3 = new Product();
         testProduct3.setproductId(3L);
         testProduct3.setPrice(new BigDecimal("25.50"));
         testProduct3.setname("Product 3");
+        testProduct3.setIn_stock(5);
+        testProduct3.setAvailability(true);
     }
 
     @Test
@@ -80,13 +86,17 @@ public class CartServiceTest {
         when(cartDao.findByCustomerWithItems(1L)).thenReturn(testCart);
         when(productDao.find(2L)).thenReturn(testProduct2);
         when(cartItemDao.findByCartAndProduct(eq(testCart), eq(testProduct2))).thenReturn(null);
+
         cartService.addItem(1L, 2L, 3);
+
         CartItem item = new CartItem();
         item.setCart(testCart);
         item.setproduct(testProduct2);
         item.setamount(3);
         when(cartItemDao.findByCartAndProduct(eq(testCart), eq(testProduct2))).thenReturn(item);
+
         cartService.addItem(1L, 2L, 2);
+
         assertEquals(5, item.getamount());
         verify(cartItemDao, atLeastOnce()).update(any(CartItem.class));
     }
@@ -102,7 +112,9 @@ public class CartServiceTest {
         item.setamount(4);
         testCart.getitem().add(item);
         when(cartItemDao.findByCartAndProduct(eq(testCart), eq(testProduct1))).thenReturn(item);
+
         cartService.updateItemQuantity(1L, 1L, 0);
+
         verify(cartItemDao, atLeastOnce()).remove(item);
         assertFalse(testCart.getitem().contains(item));
     }
@@ -123,7 +135,9 @@ public class CartServiceTest {
         }).when(cartDao).persist(any(Cart.class));
         when(cartItemDao.findByCartAndProduct(any(), eq(testProduct1))).thenReturn(null);
         when(cartDao.findByCustomerWithItems(2L)).thenReturn(customerNoCart.getCart());
+
         Cart resultCart = cartService.addItem(2L, 1L, 5);
+
         assertNotNull(resultCart);
         assertEquals(99L, resultCart.getcartId());
         assertEquals(customerNoCart, resultCart.getCustomer());
@@ -171,11 +185,15 @@ public class CartServiceTest {
         nullPriceProduct.setproductId(10L);
         nullPriceProduct.setPrice(null);
         nullPriceProduct.setname("Free product");
+        nullPriceProduct.setIn_stock(100);
+
         when(customerDao.find(1L)).thenReturn(testCustomer);
         when(cartDao.findByCustomerWithItems(1L)).thenReturn(testCart);
         when(productDao.find(10L)).thenReturn(nullPriceProduct);
         when(cartItemDao.findByCartAndProduct(eq(testCart), eq(nullPriceProduct))).thenReturn(null);
+
         cartService.addItem(1L, 10L, 5);
+
         CartItem item = new CartItem();
         item.setproduct(nullPriceProduct);
         item.setamount(5);
@@ -204,6 +222,8 @@ public class CartServiceTest {
 
     @Test
     void addItem_WithLargeQuantity_ShouldWork() {
+        testProduct1.setIn_stock(2000);
+
         when(customerDao.find(1L)).thenReturn(testCustomer);
         when(cartDao.findByCustomerWithItems(1L)).thenReturn(testCart);
         when(productDao.find(1L)).thenReturn(testProduct1);

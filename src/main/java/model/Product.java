@@ -26,7 +26,7 @@ public class Product {
     private BigDecimal price;
 
     @Column(nullable = false)
-    private int in_stock;
+    private int In_stock;
 
     @Column(nullable = false)
     private boolean availability;
@@ -74,11 +74,11 @@ public class Product {
     }
 
     public int getIn_stock() {
-        return in_stock;
+        return In_stock;
     }
 
     public void setIn_stock(int In_stock) {
-        this.in_stock = in_stock;
+        this.In_stock = In_stock;
     }
 
     public boolean isAvailability() {
