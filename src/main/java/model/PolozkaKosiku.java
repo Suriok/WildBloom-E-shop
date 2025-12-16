@@ -9,7 +9,7 @@ import java.util.Date;
         uniqueConstraints = @UniqueConstraint(
                 name = "uk_kosik_produkt",
                 columnNames = {"kosik_id", "produkt_id"}
-        )
+        )  //  одной корзине конкретный товар может встретиться только один раз
 )
 public class PolozkaKosiku {
 

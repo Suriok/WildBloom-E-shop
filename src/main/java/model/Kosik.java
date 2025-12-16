@@ -30,7 +30,7 @@ public class Kosik {
     private Zakaznik zakaznik;
 
     @OneToMany(mappedBy = "kosik", cascade = CascadeType.ALL, orphanRemoval = true)
-    @OrderBy("createdAt ASC")           // “позиции упорядочены по дате добавления”
+    @OrderBy("createdAt ASC")
     private List<PolozkaKosiku> polozky = new ArrayList<>();
 
     public Kosik() {}

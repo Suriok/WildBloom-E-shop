@@ -17,7 +17,7 @@ public class Kategorie {
     private String nazev;
 
     @OneToMany(mappedBy = "kategorie", fetch = FetchType.LAZY)
-    @OrderBy("nazev ASC")        // как в сценарии
+    @OrderBy("nazev ASC")
     private List<Produkt> produkty = new ArrayList<>();
 
     public Kategorie() {}
@@ -27,3 +27,4 @@ public class Kategorie {
     public void setNazev(String nazev) { this.nazev = nazev; }
     public List<Produkt> getProdukty() { return produkty; }
 }
+
