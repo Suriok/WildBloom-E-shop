@@ -1,13 +1,14 @@
 package service;
 
-import dao.*;
-import model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import start.dao.*;
+import start.model.*;
+import start.service.OrderService;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;

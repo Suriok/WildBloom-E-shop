@@ -29,4 +29,5 @@ model\Order.class
 model\OrderItem.class
 model\Category.class
 dto\UserDto.class
+security\SecurityConfig.class
 dao\CartItemDao.class

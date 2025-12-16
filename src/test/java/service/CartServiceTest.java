@@ -1,16 +1,17 @@
 package service;
 
-import dao.CartDao;
-import dao.CartItemDao;
-import dao.ProductDao;
-import dao.CustomerDao;
-import model.*;
+import start.dao.CartDao;
+import start.dao.CartItemDao;
+import start.dao.ProductDao;
+import start.dao.CustomerDao;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import start.model.*;
+import start.service.CartService;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
