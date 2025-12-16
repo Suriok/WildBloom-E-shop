@@ -1,5 +1,0 @@
-package model;
-
-public enum OrderStatus {
-    WAITING_FOR_CONFIRMATION, CONFIRMED, IN_TRANSIT, DELIVERED, CANCELLED
-}
