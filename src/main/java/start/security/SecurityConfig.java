@@ -3,6 +3,7 @@ package start.security;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -11,6 +12,7 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true, jsr250Enabled = true)
 public class SecurityConfig {
 
     @Bean
@@ -26,17 +28,21 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/",
                                 "/index.html",
+                                "/register.html",
                                 "/api/products/**",
-                                "/api/products/search",
                                 "/auth/**",
                                 "/css/**", "/js/**", "/images/**",
+                                "/h2-console/**",
                                 "/error",
                                 "/favicon.ico"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
+                // для H2 console
+                .headers(h -> h.frameOptions(f -> f.sameOrigin()))
                 .formLogin(Customizer.withDefaults())
-                .httpBasic(basic -> basic.disable());
+                // удобно для Postman сценариев (можно оставить включенным)
+                .httpBasic(Customizer.withDefaults());
 
         return http.build();
     }

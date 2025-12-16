@@ -42,7 +42,7 @@ public class OrderService {
     }
 
     @Transactional
-    @RolesAllowed("ROLE_ZAKAZNIK")
+    @RolesAllowed("ROLE_CUSTOMER")
     public Order createOrderFromCart(Long customerId) {
         final Customer z = ensureCustomer(customerId);
         final Cart k = ensureCartWithItems(z.getUserId());
@@ -96,7 +96,7 @@ public class OrderService {
     }
 
     @Transactional
-    @RolesAllowed({"ROLE_ZAKAZNIK", "ROLE_ADMINISTRATOR"})
+    @RolesAllowed({"ROLE_CUSTOMER", "ROLE_ADMINISTRATOR"})
     public void cancelOrder(Long customerId, Long orderId) {
         final Customer z = ensureCustomer(customerId);
         Order o = orderDao.find(requireNonNull(orderId));
@@ -124,7 +124,7 @@ public class OrderService {
     }
 
     @Transactional
-    @RolesAllowed({"ROLE_PRACOVNIK", "ROLE_ADMINISTRATOR"})
+    @RolesAllowed({"ROLE_EMPLOYEE", "ROLE_ADMINISTRATOR"})
     public Order changeStatus(Long orderId, OrderStatus newStatus) {
         Order o = orderDao.find(requireNonNull(orderId));
         if (o == null){

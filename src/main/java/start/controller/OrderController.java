@@ -25,7 +25,7 @@ public class OrderController {
     }
 
     @PostMapping("/{id}/cancel")
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('CUSTOMER','ADMINISTRATOR')")
     public ResponseEntity<Void> cancelOrder(Principal principal, @PathVariable Long id) {
         Long userId = Long.parseLong(principal.getName());
         orderService.cancelOrder(userId, id);
@@ -33,7 +33,7 @@ public class OrderController {
     }
 
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('WORKER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('EMPLOYEE','ADMINISTRATOR')")
     public ResponseEntity<Order> updateStatus(@PathVariable Long id, @RequestParam OrderStatus status) {
         return ResponseEntity.ok(orderService.changeStatus(id, status));
     }
