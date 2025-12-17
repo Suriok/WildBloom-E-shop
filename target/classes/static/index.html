@@ -12,9 +12,22 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center py-4">
             <h1 class="text-2xl font-bold text-green-600">WildBloom 🌸</h1>
-            <div class="flex gap-4">
-                <a href="login.html" class="text-gray-700 hover:text-green-600 font-medium py-2">Login</a>
-                <a href="register.html" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">Register</a>
+            <div class="flex gap-4 items-center">
+                <a id="loginLink" href="login.html" class="text-gray-700 hover:text-green-600 font-medium py-2">Login</a>
+                <a id="registerLink" href="register.html" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">Register</a>
+                <a id="cartLink" href="cart.html"
+                   class="hidden relative bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                    Cart
+                    <span id="cartBadge"
+                          class="hidden absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full px-2 py-0.5"></span>
+                </a>
+                <a id="myOrdersLink" href="my-orders.html"
+                   class="hidden text-gray-700 hover:text-green-600 font-medium py-2">
+                    My orders
+                </a>
+                <form id="logoutForm" class="hidden" method="post" action="/logout">
+                    <button class="text-gray-700 hover:text-green-600 font-medium py-2">Logout</button>
+                </form>
             </div>
         </div>
     </div>
@@ -56,7 +69,12 @@
                     <p class="text-gray-500 text-sm mb-2 h-10 overflow-hidden">${description}</p>
                     <div class="flex justify-between items-center mt-4">
                          <p class="text-green-600 font-bold text-xl">${product.price} CZK</p>
-                         <button class="text-sm bg-green-50 text-green-700 px-3 py-1 rounded hover:bg-green-100">Add to Cart</button>
+                         <button
+                          data-add-to-cart="1"
+                          data-product-id="${product.productId}"
+                          class="text-sm bg-green-50 text-green-700 px-3 py-1 rounded hover:bg-green-100">
+                          Add to Cart
+                         </button>
                     </div>
                 </div>
             </div>
@@ -88,14 +106,12 @@
                 '<p class="text-red-500 text-center col-span-full">Error loading products. Is the server running?</p>';
         });
 
-    // 2. Логика поиска (Бонус: теперь работает поиск!)
     const searchInput = document.getElementById('searchInput');
     searchInput.addEventListener('keyup', (e) => {
         if (e.key === 'Enter') {
             const query = searchInput.value;
-            // Используем ваш API поиска: /api/products/search?name=...
-            fetch('/wildbloom/api/products/search?name=${query}')
-                .then(res => res.json())
+            fetch(`/api/products/search?name=${encodeURIComponent(query)}`)
+                    .then(res => res.json())
                 .then(data => {
                     const grid = document.getElementById('productsGrid');
                     grid.innerHTML = '';
@@ -107,6 +123,71 @@
                 });
         }
     });
+
+    async function jsonOrNull(res) {
+        const ct = (res.headers.get('content-type') || '');
+        if (!ct.includes('application/json')) return null;
+        return await res.json();
+    }
+
+    async function refreshTopBar() {
+        const loginLink = document.getElementById('loginLink');
+        const registerLink = document.getElementById('registerLink');
+        const cartLink = document.getElementById('cartLink');
+        const logoutForm = document.getElementById('logoutForm');
+        const badge = document.getElementById('cartBadge');
+        const myOrdersLink = document.getElementById('myOrdersLink');
+
+        try {
+            const res = await fetch('/api/cart');
+            const data = await jsonOrNull(res);
+
+            const loggedIn = !!data;
+            loginLink.classList.toggle('hidden', loggedIn);
+            registerLink.classList.toggle('hidden', loggedIn);
+            cartLink.classList.toggle('hidden', !loggedIn);
+            logoutForm.classList.toggle('hidden', !loggedIn);
+            myOrdersLink.classList.toggle('hidden', !loggedIn);
+
+            if (loggedIn && data.itemsCount > 0) {
+                badge.textContent = data.itemsCount;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        } catch (e) {
+            // если сервер недоступен — оставляем Login/Register
+        }
+    }
+
+    document.getElementById('productsGrid').addEventListener('click', async (e) => {
+        const btn = e.target.closest('button[data-add-to-cart="1"]');
+        if (!btn) return;
+
+        const productId = Number(btn.dataset.productId);
+
+        const res = await fetch('/api/cart/items', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ productId, amount: 1 })
+        });
+
+        const data = await jsonOrNull(res);
+        if (!data) {
+            window.location.href = 'login.html';
+            return;
+        }
+        if (data.error) {
+            alert(data.error);
+            return;
+        }
+
+        await refreshTopBar();
+        alert('Added to cart ✅');
+    });
+
+    refreshTopBar();
+
 </script>
 
 </body>

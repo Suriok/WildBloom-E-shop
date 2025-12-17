@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>WildBloom - Cart</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+<header class="bg-white shadow-sm">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center py-4">
+            <a href="./" class="text-2xl font-bold text-green-600">WildBloom 🌸</a>
+
+            <div class="flex items-center gap-4">
+                <a href="my-orders.html" class="text-gray-700 hover:text-green-600 font-medium">My orders</a>
+
+                <form method="post" action="/logout">
+                    <button class="text-gray-700 hover:text-green-600 font-medium">Logout</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <h1 class="text-2xl font-bold text-gray-900 mb-6">Your cart</h1>
+
+    <div id="msg" class="hidden mb-4 rounded-lg px-4 py-3 text-sm"></div>
+
+    <div class="bg-white rounded-2xl shadow p-6">
+        <div id="cartEmpty" class="hidden text-gray-600">
+            Cart is empty. Go back to <a class="text-green-600 underline" href="./">catalog</a>.
+        </div>
+
+        <div id="cartTableWrap" class="hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm">
+                    <thead>
+                    <tr class="text-left text-gray-500 border-b">
+                        <th class="py-3 pr-4">Product</th>
+                        <th class="py-3 pr-4">Price</th>
+                        <th class="py-3 pr-4">Qty</th>
+                        <th class="py-3 pr-4">Line</th>
+                        <th class="py-3"></th>
+                    </tr>
+                    </thead>
+                    <tbody id="cartBody"></tbody>
+                </table>
+            </div>
+
+            <div class="mt-6 border-t pt-4 flex flex-col gap-2 text-sm">
+                <div class="flex justify-between"><span class="text-gray-600">Subtotal</span><span id="subtotal"></span></div>
+                <div class="flex justify-between"><span class="text-gray-600">VAT (21%)</span><span id="vat"></span></div>
+                <div class="flex justify-between"><span class="text-gray-600">Shipping</span><span id="shipping"></span></div>
+                <div class="flex justify-between text-base font-semibold">
+                    <span>Total</span><span id="total"></span>
+                </div>
+
+                <div class="mt-4 flex justify-end">
+                    <button id="checkoutBtn"
+                            class="rounded-lg bg-green-600 text-white font-semibold px-5 py-2 hover:bg-green-700 transition">
+                        Create order
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    const msg = document.getElementById('msg');
+
+    function showMsg(text, ok = true) {
+        msg.className = "mb-4 rounded-lg px-4 py-3 text-sm " + (ok
+            ? "bg-green-50 text-green-700 border border-green-200"
+            : "bg-red-50 text-red-700 border border-red-200");
+        msg.textContent = text;
+        msg.classList.remove('hidden');
+    }
+
+    async function jsonOrNull(res) {
+        const ct = (res.headers.get('content-type') || '');
+        if (!ct.includes('application/json')) return null; // например редирект на login.html
+        return await res.json();
+    }
+
+    function fmt(n) {
+        return (Number(n).toFixed(2)) + " CZK";
+    }
+
+    async function loadCart() {
+        const res = await fetch('/api/cart');
+        const data = await jsonOrNull(res);
+        if (!data) {
+            window.location.href = 'login.html';
+            return;
+        }
+
+        const empty = document.getElementById('cartEmpty');
+        const wrap = document.getElementById('cartTableWrap');
+        const body = document.getElementById('cartBody');
+
+        body.innerHTML = '';
+
+        if (!data.items || data.items.length === 0) {
+            wrap.classList.add('hidden');
+            empty.classList.remove('hidden');
+            return;
+        }
+
+        empty.classList.add('hidden');
+        wrap.classList.remove('hidden');
+
+        data.items.forEach(it => {
+            const desc = it.description ? it.description : '';
+            const tr = document.createElement('tr');
+            tr.className = "border-b";
+
+            tr.innerHTML = `
+        <td class="py-3 pr-4">
+          <div class="font-medium text-gray-900">${it.name}</div>
+          <div class="text-gray-500">${desc}</div>
+        </td>
+        <td class="py-3 pr-4 text-gray-800">${fmt(it.price)}</td>
+        <td class="py-3 pr-4">
+          <input
+            class="qty w-20 rounded-lg border border-gray-300 px-2 py-1"
+            type="number" min="0" value="${it.amount}"
+            data-product-id="${it.productId}"
+          />
+        </td>
+        <td class="py-3 pr-4 text-gray-800">${fmt(it.lineTotal)}</td>
+        <td class="py-3 text-right">
+          <button
+            class="remove text-red-600 hover:text-red-700 font-medium"
+            data-product-id="${it.productId}"
+          >Remove</button>
+        </td>
+      `;
+
+            body.appendChild(tr);
+        });
+
+        document.getElementById('subtotal').textContent = fmt(data.subtotal);
+        document.getElementById('vat').textContent = fmt(data.vat);
+        document.getElementById('shipping').textContent = fmt(data.shipping);
+        document.getElementById('total').textContent = fmt(data.total);
+    }
+
+    document.addEventListener('change', async (e) => {
+        const inp = e.target.closest('.qty');
+        if (!inp) return;
+
+        const productId = inp.dataset.productId;
+        const amount = parseInt(inp.value || '0', 10);
+
+        const res = await fetch(`/api/cart/items/${productId}`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ amount })
+        });
+
+        const data = await jsonOrNull(res);
+        if (!data) {
+            showMsg("Update failed (maybe session expired).", false);
+            return;
+        }
+        if (data.error) {
+            showMsg(data.error, false);
+        } else {
+            await loadCart();
+        }
+    });
+
+    document.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.remove');
+        if (!btn) return;
+
+        const productId = btn.dataset.productId;
+        const res = await fetch(`/api/cart/items/${productId}`, { method: 'DELETE' });
+        const data = await jsonOrNull(res);
+        if (!data) {
+            showMsg("Remove failed (maybe session expired).", false);
+            return;
+        }
+        if (data.error) showMsg(data.error, false);
+        await loadCart();
+    });
+
+    document.getElementById('checkoutBtn').addEventListener('click', async () => {
+        const res = await fetch('/api/orders', { method: 'POST' });
+        const data = await jsonOrNull(res);
+        if (!data) {
+            showMsg("Order creation failed (maybe session expired).", false);
+            return;
+        }
+        if (data.error) {
+            showMsg(data.error, false);
+            return;
+        }
+        // создаём заказ через ваш OrderController POST /api/orders :contentReference[oaicite:5]{index=5}
+        window.location.href = 'my-orders.html?created=' + encodeURIComponent(data.orderId || data.orderId);
+    });
+
+    loadCart().catch(err => showMsg("Error: " + err, false));
+</script>
+
+</body>
+</html>
