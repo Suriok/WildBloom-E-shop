@@ -9,7 +9,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 public class Product {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "product_seq_gen")
+    @SequenceGenerator(name = "product_seq_gen", sequenceName = "product_id_seq", allocationSize = 1)
     @Column(name = "product_id")
     private Long productId;
 
@@ -39,15 +40,15 @@ public class Product {
         return productId;
     }
 
-    public void setproductId(Long productId) {
+    public void setProductId(Long productId) {
         this.productId = productId;
     }
 
-    public String getname() {
+    public String getName() {
         return name;
     }
 
-    public void setname(String name) {
+    public void setName(String name) {
         this.name = name;
     }
 
@@ -59,11 +60,11 @@ public class Product {
         this.description = description;
     }
 
-    public Category getcategory() {
+    public Category getCategory() {
         return category;
     }
 
-    public void setcategory(Category category) {
+    public void setCategory(Category category) {
         this.category = category;
     }
 
@@ -75,11 +76,11 @@ public class Product {
         this.price = price;
     }
 
-    public int getIn_stock() {
+    public int getInStock() {
         return In_stock;
     }
 
-    public void setIn_stock(int In_stock) {
+    public void setInStock(int In_stock) {
         this.In_stock = In_stock;
     }
 

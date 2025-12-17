@@ -53,17 +53,17 @@ public class OrderServiceTest {
         testCart.settotalAmount(BigDecimal.ZERO);
 
         testProduct1 = new Product();
-        testProduct1.setproductId(1L);
+        testProduct1.setProductId(1L);
         testProduct1.setPrice(new BigDecimal("100.00"));
-        testProduct1.setname("Product A");
-        testProduct1.setIn_stock(10);
+        testProduct1.setName("Product A");
+        testProduct1.setInStock(10);
         testProduct1.setAvailability(true);
 
         testProduct2 = new Product();
-        testProduct2.setproductId(2L);
+        testProduct2.setProductId(2L);
         testProduct2.setPrice(new BigDecimal("50.00"));
-        testProduct2.setname("Product B");
-        testProduct2.setIn_stock(10);
+        testProduct2.setName("Product B");
+        testProduct2.setInStock(10);
         testProduct2.setAvailability(true);
     }
 
@@ -145,7 +145,7 @@ public class OrderServiceTest {
             return null;
         }).when(orderDao).persist(any(Order.class));
         orderService.createOrderFromCart(1L);
-        assertEquals(7, testProduct1.getIn_stock());
+        assertEquals(7, testProduct1.getInStock());
     }
 
     @Test
@@ -192,10 +192,10 @@ public class OrderServiceTest {
         when(customerDao.find(1L)).thenReturn(testCustomer);
         when(orderDao.find(10L)).thenReturn(order);
         when(orderDao.findByIdWithItems(10L)).thenReturn(order);
-        int initialStock = testProduct1.getIn_stock();
+        int initialStock = testProduct1.getInStock();
         orderService.cancelOrder(1L, 10L);
         assertEquals(OrderStatus.CANCELLED, order.getstatus());
-        assertEquals(initialStock + 3, testProduct1.getIn_stock());
+        assertEquals(initialStock + 3, testProduct1.getInStock());
         verify(productDao, times(1)).update(testProduct1);
         verify(orderDao, times(1)).update(order);
     }
@@ -317,11 +317,11 @@ public class OrderServiceTest {
         when(customerDao.find(1L)).thenReturn(testCustomer);
         when(orderDao.find(10L)).thenReturn(order);
         when(orderDao.findByIdWithItems(10L)).thenReturn(order);
-        int stock1Before = testProduct1.getIn_stock();
-        int stock2Before = testProduct2.getIn_stock();
+        int stock1Before = testProduct1.getInStock();
+        int stock2Before = testProduct2.getInStock();
         orderService.cancelOrder(1L, 10L);
-        assertEquals(stock1Before + 2, testProduct1.getIn_stock());
-        assertEquals(stock2Before + 3, testProduct2.getIn_stock());
+        assertEquals(stock1Before + 2, testProduct1.getInStock());
+        assertEquals(stock2Before + 3, testProduct2.getInStock());
         verify(productDao, times(2)).update(any(Product.class));
     }
 }

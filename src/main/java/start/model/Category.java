@@ -9,7 +9,8 @@ import java.util.List;
 public class Category {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "category_seq_gen")
+    @SequenceGenerator(name = "category_seq_gen", sequenceName = "category_id_seq", allocationSize = 1)
     @Column(name = "category_id")
     private Long categoryId;
 
@@ -23,8 +24,8 @@ public class Category {
 
     public Category() {}
 
-    public Long getcategoryId() { return categoryId; }
-    public String getname() { return name; }
-    public void setname(String name) { this.name = name; }
+    public Long getCategoryId() { return categoryId; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
     public List<Product> getproducty() { return producty; }
 }

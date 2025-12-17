@@ -24,7 +24,7 @@
             </button>
 
             <p id="msg" class="text-sm"></p>
-            <a href="login" class="text-green-700 underline text-sm">Already have an account? Login</a>
+            <a href="login.html" class="text-green-700 underline text-sm">Already have an account? Login</a>
         </form>
     </div>
 </div>
@@ -57,7 +57,7 @@
             if (res.ok) {
                 msg.textContent = 'Registered successfully. Redirecting to login...';
                 msg.className = 'text-sm text-green-700';
-                setTimeout(() => window.location.href = 'login', 800);
+                setTimeout(() => window.location.href = 'login.html', 800);
             } else {
                 const text = await res.text();
                 msg.textContent = 'Registration failed: ' + (text || res.status);
