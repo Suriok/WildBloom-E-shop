@@ -23,7 +23,6 @@ public class DbUserDetailsService implements UserDetailsService {
             throw new UsernameNotFoundException("User not found: " + email);
         }
 
-        // Важно: hasRole('X') в Spring ожидает authority "ROLE_X"
         String role = "ROLE_" + u.getRole().name();
 
         return org.springframework.security.core.userdetails.User
