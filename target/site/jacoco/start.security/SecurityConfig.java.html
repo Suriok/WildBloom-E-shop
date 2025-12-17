@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SecurityConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">WildBloom</a> &gt; <a href="index.source.html" class="el_package">start.security</a> &gt; <span class="el_source">SecurityConfig.java</span></div><h1>SecurityConfig.java</h1><pre class="source lang-java linenums">//package start.security;
+//
+//import org.springframework.context.annotation.Bean;
+//import org.springframework.context.annotation.Configuration;
+//import org.springframework.security.config.Customizer;
+//import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+//import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+//import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+//import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+//import org.springframework.security.crypto.password.PasswordEncoder;
+//import org.springframework.security.web.SecurityFilterChain;
+//
+//@Configuration
+//@EnableWebSecurity
+//@EnableMethodSecurity(prePostEnabled = true, jsr250Enabled = true)
+//public class SecurityConfig {
+//
+//    @Bean
+//    public PasswordEncoder passwordEncoder() {
+//        return new BCryptPasswordEncoder();
+//    }
+//
+//    @Bean
+//    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+//        http
+//                .csrf(csrf -&gt; csrf.disable())
+//                .authorizeHttpRequests(auth -&gt; auth
+//                        .requestMatchers(
+//                                &quot;/&quot;,
+//                                &quot;/index.html&quot;,
+//                                &quot;/register.html&quot;,
+//                                &quot;/api/products/**&quot;,
+//                                &quot;/auth/**&quot;,
+//                                &quot;/css/**&quot;, &quot;/js/**&quot;, &quot;/images/**&quot;,
+//                                &quot;/h2-console/**&quot;,
+//                                &quot;/error&quot;,
+//                                &quot;/favicon.ico&quot;
+//                        ).permitAll()
+//                        .anyRequest().authenticated()
+//                )
+//                // для H2 console
+//                .headers(h -&gt; h.frameOptions(f -&gt; f.sameOrigin()))
+//                .formLogin(Customizer.withDefaults())
+//                // удобно для Postman сценариев (можно оставить включенным)
+//                .httpBasic(Customizer.withDefaults());
+//
+//        return http.build();
+//    }
+//}
+
+
+package start.security;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+
+import java.util.Set;
+import java.util.stream.Collectors;
+
+@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true, jsr250Enabled = true)
+<span class="nc" id="L71">public class SecurityConfig {</span>
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+<span class="nc" id="L75">        http</span>
+<span class="nc" id="L76">                .authorizeHttpRequests(auth -&gt; auth</span>
+<span class="nc" id="L77">                        .requestMatchers(</span>
+                                &quot;/&quot;, &quot;/index.html&quot;,
+                                &quot;/login.html&quot;, &quot;/register.html&quot;,
+                                &quot;/css/**&quot;, &quot;/js/**&quot;, &quot;/images/**&quot;, &quot;/assets/**&quot;,
+                                &quot;/favicon.ico&quot;,
+                                &quot;/api/products/**&quot;,
+                                &quot;/auth/**&quot;,
+                                &quot;/error&quot;
+<span class="nc" id="L85">                        ).permitAll()</span>
+
+<span class="nc" id="L87">                        .requestMatchers(&quot;/my-orders.html&quot;).hasRole(&quot;CUSTOMER&quot;)</span>
+<span class="nc" id="L88">                        .requestMatchers(&quot;/orders-management.html&quot;).hasAnyRole(&quot;EMPLOYEE&quot;, &quot;ADMINISTRATOR&quot;)</span>
+
+<span class="nc" id="L90">                        .anyRequest().authenticated()</span>
+                )
+<span class="nc" id="L92">                .formLogin(form -&gt; form</span>
+<span class="nc" id="L93">                        .loginPage(&quot;/login.html&quot;)</span>
+<span class="nc" id="L94">                        .loginProcessingUrl(&quot;/login&quot;)</span>
+<span class="nc" id="L95">                        .successHandler(roleBasedSuccessHandler())</span>
+<span class="nc" id="L96">                        .failureUrl(&quot;/login.html?error&quot;)</span>
+<span class="nc" id="L97">                        .permitAll()</span>
+                )
+<span class="nc" id="L99">                .logout(logout -&gt; logout</span>
+<span class="nc" id="L100">                        .logoutUrl(&quot;/logout&quot;)</span>
+<span class="nc" id="L101">                        .logoutSuccessUrl(&quot;/&quot;)</span>
+<span class="nc" id="L102">                        .invalidateHttpSession(true)</span>
+<span class="nc" id="L103">                        .deleteCookies(&quot;JSESSIONID&quot;)</span>
+<span class="nc" id="L104">                        .permitAll()</span>
+                )
+<span class="nc" id="L106">                .csrf(csrf -&gt; csrf.disable());</span>
+
+<span class="nc" id="L108">        return http.build();</span>
+    }
+
+    @Bean
+    public AuthenticationSuccessHandler roleBasedSuccessHandler() {
+<span class="nc" id="L113">        return (request, response, authentication) -&gt; {</span>
+<span class="nc" id="L114">            Set&lt;String&gt; roles = authentication.getAuthorities().stream()</span>
+<span class="nc" id="L115">                    .map(GrantedAuthority::getAuthority)</span>
+<span class="nc" id="L116">                    .collect(Collectors.toSet());</span>
+
+            String target;
+<span class="nc bnc" id="L119" title="All 2 branches missed.">            if (roles.contains(&quot;ROLE_CUSTOMER&quot;)) {</span>
+<span class="nc" id="L120">                target = &quot;/my-orders.html&quot;;</span>
+<span class="nc bnc" id="L121" title="All 4 branches missed.">            } else if (roles.contains(&quot;ROLE_EMPLOYEE&quot;) || roles.contains(&quot;ROLE_ADMINISTRATOR&quot;)) {</span>
+<span class="nc" id="L122">                target = &quot;/orders-management.html&quot;;</span>
+            } else {
+<span class="nc" id="L124">                target = &quot;/&quot;;</span>
+            }
+
+<span class="nc" id="L127">            response.sendRedirect(request.getContextPath() + target);</span>
+<span class="nc" id="L128">        };</span>
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+<span class="nc" id="L133">        return new BCryptPasswordEncoder();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

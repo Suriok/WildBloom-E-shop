@@ -1,10 +1,12 @@
 package start.dao;
+
 import start.dao.exception.DaoException;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.criteria.*;
+import org.springframework.stereotype.Repository;
 import start.model.Category;
 import start.model.Product;
-import org.springframework.stereotype.Repository;
+import start.model.Product_;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -13,15 +15,20 @@ import java.util.List;
 @Repository
 public class ProductDao extends BaseDao<Product> {
 
-    public ProductDao() { super(Product.class); }
+    public ProductDao() {
+        super(Product.class);
+    }
 
-    public List<Product> findByCategory(Category category) {
+    public List<Product> findByCategory(Category categoryArg) {
         try {
-            return em.createQuery("SELECT p FROM Product p WHERE p.category = :k", Product.class)
-                    .setParameter("k", category)
-                    .getResultList();
+            CriteriaBuilder cb = em.getCriteriaBuilder();
+            CriteriaQuery<Product> cq = cb.createQuery(Product.class);
+            Root<Product> root = cq.from(Product.class);
+            cq.where(cb.equal(root.get(Product_.category), categoryArg));
+
+            return em.createQuery(cq).getResultList();
         } catch (PersistenceException e) {
-            throw new DaoException("Error finding products by category " + category, e);
+            throw new DaoException("Error finding products by category " + categoryArg, e);
         }
     }
 
@@ -33,22 +40,27 @@ public class ProductDao extends BaseDao<Product> {
 
             List<Predicate> predicates = new ArrayList<>();
 
-            if (nameFragment != null && !nameFragment.isEmpty()) {
-                predicates.add(cb.like(cb.lower(root.get("name")), "%" + nameFragment.toLowerCase() + "%"));
-            }
+            if (nameFragment != null && !nameFragment.trim().isEmpty()) {
+                String searchStr = nameFragment.toLowerCase().trim();
 
-            if (minPrice != null) {
-                predicates.add(cb.ge(root.get("price"), minPrice));
-            }
+                Predicate nameMatch = cb.like(cb.lower(root.get(Product_.name)), "%" + searchStr + "%");
 
-            if (maxPrice != null) {
-                predicates.add(cb.le(root.get("price"), maxPrice));
-            }
+                BigDecimal priceValue = null;
+                try {
+                    priceValue = new BigDecimal(searchStr);
+                } catch (NumberFormatException e) {
+                }
 
+                if (priceValue != null) {
+                    Predicate priceMatch = cb.equal(root.get(Product_.price), priceValue);
+                    predicates.add(cb.or(nameMatch, priceMatch));
+                } else {
+                    predicates.add(nameMatch);
+                }
+            }
             if (!predicates.isEmpty()) {
                 cq.where(predicates.toArray(new Predicate[0]));
             }
-
             return em.createQuery(cq).getResultList();
 
         } catch (PersistenceException e) {

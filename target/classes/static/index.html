@@ -26,7 +26,7 @@
             <input
                     type="text"
                     id="searchInput"
-                    placeholder="Search for flowers..."
+                    placeholder="Search for flowers with name or price..."
                     class="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
             >
             <svg class="absolute left-4 top-3.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -88,13 +88,11 @@
                 '<p class="text-red-500 text-center col-span-full">Error loading products. Is the server running?</p>';
         });
 
-    // 2. Логика поиска (Бонус: теперь работает поиск!)
     const searchInput = document.getElementById('searchInput');
     searchInput.addEventListener('keyup', (e) => {
         if (e.key === 'Enter') {
             const query = searchInput.value;
-            // Используем ваш API поиска: /api/products/search?name=...
-            fetch('/wildbloom/api/products/search?name=${query}')
+            fetch(`/api/products/search?name=${query}`)
                 .then(res => res.json())
                 .then(data => {
                     const grid = document.getElementById('productsGrid');
@@ -104,10 +102,10 @@
                     } else {
                         data.forEach(p => grid.innerHTML += createProductCard(p));
                     }
-                });
+                })
+            .catch(err => console.error("Search error:", err));
         }
     });
 </script>
-
 </body>
 </html>

@@ -9,17 +9,18 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class CategoryDao extends BaseDao<Category> {
 
-    public CategoryDao() { super(Category.class); }
+    public CategoryDao() {
+        super(Category.class);
+    }
 
     public Category findByNameIgnoreCase(String name) {
         try {
-            return em.createQuery(
-                            "SELECT k FROM Category k WHERE LOWER(k.name) = LOWER(:name)", Category.class)
+            return em.createNamedQuery("Category.findByName", Category.class)
                     .setParameter("name", name)
                     .getSingleResult();
         } catch (NoResultException e) {
             return null;
-        }catch (PersistenceException e) {
+        } catch (PersistenceException e) {
             throw new DaoException("Error finding category by name: " + name, e);
         }
     }

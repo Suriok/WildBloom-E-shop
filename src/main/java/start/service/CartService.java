@@ -45,8 +45,8 @@ public class CartService {
 
         final Product p = ensureproduct(productId);
 
-        if (p.getInStock() < amount) {
-            throw new IllegalStateException("Nedostatek zboží na skladě. Dostupné: " + p.getInStock());
+        if (p.getin_stock() < amount) {
+            throw new IllegalStateException("Nedostatek zboží na skladě. Dostupné: " + p.getin_stock());
         }
 
         CartItem pk = cartItemDao.findByCartAndProduct(k, p);
