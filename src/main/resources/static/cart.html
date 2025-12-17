@@ -69,6 +69,29 @@
     </div>
 </main>
 
+<div id="orderModal" class="hidden fixed inset-0 bg-black/40 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+        <h3 class="text-xl font-bold text-gray-900">Create order?</h3>
+        <p class="text-gray-600 mt-1">Please confirm you want to place this order.</p>
+
+        <div class="mt-4 space-y-2 text-sm">
+            <div class="flex justify-between"><span class="text-gray-600">Items</span><span id="mItems" class="font-semibold">0</span></div>
+            <div class="flex justify-between"><span class="text-gray-600">Subtotal</span><span id="mSubtotal" class="font-semibold">0 CZK</span></div>
+            <div class="flex justify-between"><span class="text-gray-600">DPH</span><span id="mDph" class="font-semibold">0 CZK</span></div>
+            <div class="flex justify-between"><span class="text-gray-600">Shipping</span><span id="mShip" class="font-semibold">0 CZK</span></div>
+            <div class="flex justify-between text-base pt-2 border-t"><span class="text-gray-900 font-bold">Total</span><span id="mTotal" class="text-green-700 font-bold">0 CZK</span></div>
+        </div>
+
+        <div id="mErr" class="hidden mt-3 text-sm text-red-600"></div>
+
+        <div class="mt-6 flex gap-3 justify-end">
+            <button id="modalNo" class="px-4 py-2 rounded-lg border hover:bg-gray-50">No</button>
+            <button id="modalYes" class="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700">Yes, create</button>
+        </div>
+    </div>
+</div>
+
+
 <script>
     const msg = document.getElementById('msg');
 
@@ -205,6 +228,62 @@
     });
 
     loadCart().catch(err => showMsg("Error: " + err, false));
+
+
+    let lastCart = null;
+
+    function openOrderModal(cart) {
+        document.getElementById('mErr').classList.add('hidden');
+
+        const itemsCount = (cart.items || []).reduce((s, it) => s + (it.amount || 0), 0);
+
+        document.getElementById('mItems').textContent = itemsCount;
+        document.getElementById('mSubtotal').textContent = `${cart.subtotal ?? 0} CZK`;
+        document.getElementById('mDph').textContent = `${cart.dph ?? 0} CZK`;
+        document.getElementById('mShip').textContent = `${cart.shipping ?? 0} CZK`;
+        document.getElementById('mTotal').textContent = `${cart.total ?? 0} CZK`;
+
+        document.getElementById('orderModal').classList.remove('hidden');
+    }
+
+    function closeOrderModal() {
+        document.getElementById('orderModal').classList.add('hidden');
+    }
+
+    document.getElementById('modalNo').addEventListener('click', closeOrderModal);
+
+    document.getElementById('modalYes').addEventListener('click', async () => {
+        const btn = document.getElementById('modalYes');
+        btn.disabled = true;
+
+        try {
+            const res = await fetch('/api/orders', { method: 'POST' });
+            const ct = (res.headers.get('content-type') || '');
+            if (!ct.includes('application/json')) {
+                window.location.href = "/login.html";
+                return;
+            }
+            if (!res.ok) {
+                const t = await res.text();
+                throw new Error(t || res.status);
+            }
+
+            const created = await res.json();
+
+            closeOrderModal();
+            window.location.href = '/my-orders.html';
+        } catch (e) {
+            const err = document.getElementById('mErr');
+            err.textContent = `Failed to create order: ${e.message}`;
+            err.classList.remove('hidden');
+        } finally {
+            btn.disabled = false;
+        }
+    });
+
+    // ВАЖНО: когда ты загружаешь корзину с сервера — сохрани в lastCart
+    // lastCart = data;
+
 </script>
 
 </body>
