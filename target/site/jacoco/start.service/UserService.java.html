@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">WildBloom</a> &gt; <a href="index.source.html" class="el_package">start.service</a> &gt; <span class="el_source">UserService.java</span></div><h1>UserService.java</h1><pre class="source lang-java linenums">package start.service;
+
+import start.dao.AdministratorDao;
+import start.dao.CustomerDao;
+import start.dao.EmployeeDao;
+import start.dao.UserDao;
+import start.dto.CreateAdministratorDto;
+import start.dto.CreateEmployeeDto;
+import start.dto.UserDto;
+import start.model.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Date;
+
+@Service
+public class UserService {
+
+    private final CustomerDao customerDao;
+    private final EmployeeDao employeeDao;
+    private final AdministratorDao administratorDao;
+    private final UserDao userDao;
+    private final PasswordEncoder passwordEncoder;
+
+    public UserService(CustomerDao customerDao,
+                       EmployeeDao employeeDao,
+                       AdministratorDao administratorDao,
+                       UserDao userDao,
+<span class="nc" id="L30">                       PasswordEncoder passwordEncoder) {</span>
+<span class="nc" id="L31">        this.customerDao = customerDao;</span>
+<span class="nc" id="L32">        this.employeeDao = employeeDao;</span>
+<span class="nc" id="L33">        this.administratorDao = administratorDao;</span>
+<span class="nc" id="L34">        this.userDao = userDao;</span>
+<span class="nc" id="L35">        this.passwordEncoder = passwordEncoder;</span>
+<span class="nc" id="L36">    }</span>
+
+    @Transactional
+    public void registerCustomer(UserDto dto) {
+<span class="nc bnc" id="L40" title="All 2 branches missed.">        if (userDao.existsByEmail(dto.getEmail())) {</span>
+<span class="nc" id="L41">            throw new IllegalArgumentException(&quot;User with email &quot; + dto.getEmail() + &quot; already exists.&quot;);</span>
+        }
+
+<span class="nc" id="L44">        Customer customer = new Customer();</span>
+<span class="nc" id="L45">        customer.setName(dto.getName());</span>
+<span class="nc" id="L46">        customer.setEmail(dto.getEmail());</span>
+<span class="nc" id="L47">        customer.setPassword(passwordEncoder.encode(dto.getPassword()));</span>
+<span class="nc" id="L48">        customer.setPhone(dto.getPhone());</span>
+<span class="nc" id="L49">        customer.setAddress(dto.getAddress());</span>
+<span class="nc" id="L50">        customer.setRole(UserRole.CUSTOMER);</span>
+<span class="nc" id="L51">        customer.setdateRegistrace(new Date());</span>
+
+<span class="nc" id="L53">        Cart cart = new Cart();</span>
+<span class="nc" id="L54">        cart.setCustomer(customer);</span>
+<span class="nc" id="L55">        customer.setCart(cart);</span>
+
+<span class="nc" id="L57">        customerDao.persist(customer);</span>
+<span class="nc" id="L58">    }</span>
+
+    @Transactional
+    public void createEmployee(CreateEmployeeDto dto) {
+<span class="nc bnc" id="L62" title="All 2 branches missed.">        if (userDao.existsByEmail(dto.getEmail())) {</span>
+<span class="nc" id="L63">            throw new IllegalArgumentException(&quot;User with email &quot; + dto.getEmail() + &quot; already exists.&quot;);</span>
+        }
+
+<span class="nc" id="L66">        Employee e = new Employee();</span>
+<span class="nc" id="L67">        e.setName(dto.getName());</span>
+<span class="nc" id="L68">        e.setEmail(dto.getEmail());</span>
+<span class="nc" id="L69">        e.setPassword(passwordEncoder.encode(dto.getPassword()));</span>
+<span class="nc" id="L70">        e.setPhone(dto.getPhone());</span>
+<span class="nc" id="L71">        e.setAddress(dto.getAddress());</span>
+<span class="nc" id="L72">        e.setRole(UserRole.EMPLOYEE);</span>
+<span class="nc" id="L73">        e.setPosition(dto.getPosition());</span>
+<span class="nc" id="L74">        e.setdateNastupu(new Date());</span>
+
+<span class="nc" id="L76">        employeeDao.persist(e);</span>
+<span class="nc" id="L77">    }</span>
+
+    @Transactional
+    public void createAdministrator(CreateAdministratorDto dto) {
+<span class="nc bnc" id="L81" title="All 2 branches missed.">        if (userDao.existsByEmail(dto.getEmail())) {</span>
+<span class="nc" id="L82">            throw new IllegalArgumentException(&quot;User with email &quot; + dto.getEmail() + &quot; already exists.&quot;);</span>
+        }
+
+<span class="nc" id="L85">        Administrator a = new Administrator();</span>
+<span class="nc" id="L86">        a.setName(dto.getName());</span>
+<span class="nc" id="L87">        a.setEmail(dto.getEmail());</span>
+<span class="nc" id="L88">        a.setPassword(passwordEncoder.encode(dto.getPassword()));</span>
+<span class="nc" id="L89">        a.setPhone(dto.getPhone());</span>
+<span class="nc" id="L90">        a.setAddress(dto.getAddress());</span>
+<span class="nc" id="L91">        a.setRole(UserRole.ADMINISTRATOR);</span>
+<span class="nc" id="L92">        a.setrights(dto.getRights());</span>
+
+<span class="nc" id="L94">        administratorDao.persist(a);</span>
+<span class="nc" id="L95">    }</span>
+
+    public User getByEmail(String email) {
+<span class="nc" id="L98">        User u = userDao.findByEmail(email);</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">        if (u == null) {</span>
+<span class="nc" id="L100">            throw new IllegalArgumentException(&quot;User not found: &quot; + email);</span>
+        }
+<span class="nc" id="L102">        return u;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

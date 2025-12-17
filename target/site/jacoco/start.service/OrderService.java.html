@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OrderService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">WildBloom</a> &gt; <a href="index.source.html" class="el_package">start.service</a> &gt; <span class="el_source">OrderService.java</span></div><h1>OrderService.java</h1><pre class="source lang-java linenums">package start.service;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import jakarta.annotation.security.RolesAllowed;
+import start.dao.*;
+import start.model.*;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.*;
+
+import static java.util.Objects.requireNonNull;
+
+@Service
+public class OrderService {
+
+    private final CustomerDao customerDao;
+    private final CartDao cartDao;
+    private final ProductDao productDao;
+    private final OrderDao orderDao;
+    private final OrderItemDao orderItemDao;
+
+<span class="fc" id="L24">    private static final BigDecimal DPH_RATE = new BigDecimal(&quot;0.21&quot;); // 21%</span>
+<span class="fc" id="L25">    private static final BigDecimal DOrights = new BigDecimal(&quot;50.00&quot;);</span>
+
+<span class="fc" id="L27">    private static final Map&lt;OrderStatus, Set&lt;OrderStatus&gt;&gt; ALLOWED = new EnumMap&lt;&gt;(OrderStatus.class);</span>
+    static {
+<span class="fc" id="L29">        ALLOWED.put(OrderStatus.WAITING_FOR_CONFIRMATION, Set.of(OrderStatus.CONFIRMED, OrderStatus.CANCELLED));</span>
+<span class="fc" id="L30">        ALLOWED.put(OrderStatus.CONFIRMED, Set.of(OrderStatus.IN_TRANSIT, OrderStatus.CANCELLED));</span>
+<span class="fc" id="L31">        ALLOWED.put(OrderStatus.IN_TRANSIT, Set.of(OrderStatus.DELIVERED));</span>
+<span class="fc" id="L32">        ALLOWED.put(OrderStatus.DELIVERED, Set.of());</span>
+<span class="fc" id="L33">        ALLOWED.put(OrderStatus.CANCELLED, Set.of());</span>
+<span class="fc" id="L34">    }</span>
+
+<span class="fc" id="L36">    public OrderService(CustomerDao customerDao, CartDao cartDao, ProductDao productDao, OrderDao orderDao, OrderItemDao orderItemDao) {</span>
+<span class="fc" id="L37">        this.customerDao = customerDao;</span>
+<span class="fc" id="L38">        this.cartDao = cartDao;</span>
+<span class="fc" id="L39">        this.productDao = productDao;</span>
+<span class="fc" id="L40">        this.orderDao = orderDao;</span>
+<span class="fc" id="L41">        this.orderItemDao = orderItemDao;</span>
+<span class="fc" id="L42">    }</span>
+
+    @Transactional
+    @RolesAllowed(&quot;ROLE_CUSTOMER&quot;)
+    public Order createOrderFromCart(Long customerId) {
+<span class="fc" id="L47">        final Customer z = ensureCustomer(customerId);</span>
+<span class="fc" id="L48">        final Cart k = ensureCartWithItems(z.getUserId());</span>
+<span class="fc bfc" id="L49" title="All 2 branches covered.">        if (k.getitem().isEmpty()){</span>
+<span class="fc" id="L50">            throw new IllegalStateException(&quot;Cart is empty&quot;);</span>
+        }
+
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        for (CartItem it : k.getitem()) {</span>
+<span class="fc" id="L54">            Product p = it.getproduct();</span>
+<span class="fc bfc" id="L55" title="All 2 branches covered.">            if (p.getInStock() &lt; it.getamount()) {</span>
+<span class="fc" id="L56">                throw new IllegalStateException(&quot;Insufficient stock: &quot; + p.getName());</span>
+            }
+<span class="fc" id="L58">        }</span>
+
+<span class="fc" id="L60">        Order o = new Order();</span>
+<span class="fc" id="L61">        o.setCustomer(z);</span>
+<span class="fc" id="L62">        orderDao.persist(o);</span>
+
+<span class="fc" id="L64">        BigDecimal subtotal = BigDecimal.ZERO;</span>
+
+<span class="fc bfc" id="L66" title="All 2 branches covered.">        for (CartItem it : k.getitem()) {</span>
+<span class="fc" id="L67">            Product p = it.getproduct();</span>
+
+<span class="fc" id="L69">            OrderItem po = new OrderItem();</span>
+<span class="fc" id="L70">            po.setOrder(o);</span>
+<span class="fc" id="L71">            po.setproduct(p);</span>
+<span class="fc" id="L72">            po.setamount(it.getamount());</span>
+<span class="fc" id="L73">            po.setPriceSnapshot(p.getPrice());</span>
+<span class="fc" id="L74">            orderItemDao.persist(po);</span>
+<span class="fc" id="L75">            o.getitem().add(po);</span>
+
+<span class="fc" id="L77">            p.setInStock(p.getInStock() - it.getamount());</span>
+<span class="fc" id="L78">            productDao.update(p);</span>
+
+<span class="fc" id="L80">            subtotal = subtotal.add(p.getPrice().multiply(BigDecimal.valueOf(it.getamount())));</span>
+<span class="fc" id="L81">        }</span>
+
+<span class="fc" id="L83">        BigDecimal dph = subtotal.multiply(DPH_RATE).setScale(2, RoundingMode.HALF_UP);</span>
+<span class="fc" id="L84">        BigDecimal total = subtotal.add(dph).add(DOrights).setScale(2, RoundingMode.HALF_UP);</span>
+
+<span class="fc" id="L86">        o.setDph(dph);</span>
+<span class="fc" id="L87">        o.setDorights(DOrights);</span>
+<span class="fc" id="L88">        o.setTotalAmount(total);</span>
+<span class="fc" id="L89">        orderDao.update(o);</span>
+
+<span class="fc" id="L91">        k.getitem().clear();</span>
+<span class="fc" id="L92">        k.settotalAmount(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));</span>
+<span class="fc" id="L93">        cartDao.update(k);</span>
+
+<span class="fc" id="L95">        return o;</span>
+    }
+
+    @Transactional
+    @RolesAllowed({&quot;ROLE_CUSTOMER&quot;, &quot;ROLE_ADMINISTRATOR&quot;})
+    public void cancelOrder(Long customerId, Long orderId) {
+<span class="fc" id="L101">        final Customer z = ensureCustomer(customerId);</span>
+<span class="fc" id="L102">        Order o = orderDao.find(requireNonNull(orderId));</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">        if (o == null){</span>
+<span class="fc" id="L104">            throw new NoSuchElementException(&quot;Order not found&quot;);</span>
+        }
+<span class="fc bfc" id="L106" title="All 2 branches covered.">        if (!o.getCustomer().getUserId().equals(z.getUserId())) {</span>
+<span class="fc" id="L107">            throw new IllegalStateException(&quot;Order does not belong to user&quot;);</span>
+        }
+<span class="fc bfc" id="L109" title="All 4 branches covered.">        if (!(o.getstatus() == OrderStatus.WAITING_FOR_CONFIRMATION || o.getstatus() == OrderStatus.CONFIRMED)) {</span>
+<span class="fc" id="L110">            throw new IllegalStateException(&quot;Cancellation not allowed for status: &quot; + o.getstatus());</span>
+        }
+
+<span class="fc" id="L113">        Order withItems = orderDao.findByIdWithItems(orderId);</span>
+<span class="pc bpc" id="L114" title="1 of 2 branches missed.">        if (withItems == null) withItems = o;</span>
+
+<span class="fc bfc" id="L116" title="All 2 branches covered.">        for (OrderItem po : withItems.getitem()) {</span>
+<span class="fc" id="L117">            Product p = po.getproduct();</span>
+<span class="fc" id="L118">            p.setInStock(p.getInStock() + po.getamount());</span>
+<span class="fc" id="L119">            productDao.update(p);</span>
+<span class="fc" id="L120">        }</span>
+
+<span class="fc" id="L122">        o.setstatus(OrderStatus.CANCELLED);</span>
+<span class="fc" id="L123">        orderDao.update(o);</span>
+<span class="fc" id="L124">    }</span>
+
+    @Transactional
+    @RolesAllowed({&quot;ROLE_EMPLOYEE&quot;, &quot;ROLE_ADMINISTRATOR&quot;})
+    public Order changeStatus(Long orderId, OrderStatus newStatus) {
+<span class="fc" id="L129">        Order o = orderDao.find(requireNonNull(orderId));</span>
+<span class="fc bfc" id="L130" title="All 2 branches covered.">        if (o == null){</span>
+<span class="fc" id="L131">            throw new NoSuchElementException(&quot;Order not found&quot;);</span>
+        }
+
+<span class="fc" id="L134">        final OrderStatus from = o.getstatus();</span>
+<span class="fc bfc" id="L135" title="All 2 branches covered.">        if (!ALLOWED.getOrDefault(from, Set.of()).contains(newStatus)) {</span>
+<span class="fc" id="L136">            throw new IllegalStateException(&quot;Invalid status transition: &quot; + from + &quot; -&gt; &quot; + newStatus);</span>
+        }
+<span class="fc" id="L138">        o.setstatus(newStatus);</span>
+<span class="fc" id="L139">        return orderDao.update(o);</span>
+    }
+
+    // helpers
+    private Customer ensureCustomer(Long id) {
+<span class="fc" id="L144">        Customer z = customerDao.find(requireNonNull(id));</span>
+<span class="fc bfc" id="L145" title="All 2 branches covered.">        if (z == null){</span>
+<span class="fc" id="L146">            throw new NoSuchElementException(&quot;Customer not found&quot;);</span>
+        }
+<span class="fc" id="L148">        return z;</span>
+    }
+
+    private Cart ensureCartWithItems(Long customerId) {
+<span class="fc" id="L152">        Cart k = cartDao.findByCustomerWithItems(requireNonNull(customerId));</span>
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">        if (k == null){</span>
+<span class="nc" id="L154">            throw new NoSuchElementException(&quot;Cart not found&quot;);</span>
+        }
+<span class="fc" id="L156">        return k;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

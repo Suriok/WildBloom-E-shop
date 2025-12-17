@@ -1,5 +1,6 @@
 package start.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import start.dao.ProductDao;
 import start.model.Product;
 import org.springframework.web.bind.annotation.*;
@@ -26,5 +27,11 @@ public class ProductController {
                                 @RequestParam(required = false) BigDecimal minPrice,
                                 @RequestParam(required = false) BigDecimal maxPrice) {
         return productDao.searchProducts(name, minPrice, maxPrice);
+    }
+
+    @PostMapping
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
+    public void createProduct(@RequestBody Product product) {
+        productDao.persist(product);
     }
 }

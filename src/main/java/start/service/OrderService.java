@@ -52,7 +52,7 @@ public class OrderService {
 
         for (CartItem it : k.getitem()) {
             Product p = it.getproduct();
-            if (p.getInStock() < it.getamount()) {
+            if (p.getin_stock() < it.getamount()) {
                 throw new IllegalStateException("Insufficient stock: " + p.getName());
             }
         }
@@ -74,7 +74,7 @@ public class OrderService {
             orderItemDao.persist(po);
             o.getitem().add(po);
 
-            p.setInStock(p.getInStock() - it.getamount());
+            p.setin_stock(p.getin_stock() - it.getamount());
             productDao.update(p);
 
             subtotal = subtotal.add(p.getPrice().multiply(BigDecimal.valueOf(it.getamount())));
@@ -115,7 +115,7 @@ public class OrderService {
 
         for (OrderItem po : withItems.getitem()) {
             Product p = po.getproduct();
-            p.setInStock(p.getInStock() + po.getamount());
+            p.setin_stock(p.getin_stock() + po.getamount());
             productDao.update(p);
         }
 

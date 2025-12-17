@@ -6,6 +6,10 @@ import java.util.List;
 
 @Entity
 @Table(name = "category")
+@NamedQuery(
+        name = "Category.findByName",
+        query = "SELECT c FROM Category c WHERE LOWER(c.name) = LOWER(:name)"
+)
 public class Category {
 
     @Id
@@ -17,7 +21,7 @@ public class Category {
     @Column(nullable = false, unique = true)
     private String name;
 
-    @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "category", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @OrderBy("name ASC")
     @com.fasterxml.jackson.annotation.JsonIgnore
     private List<Product> producty = new ArrayList<>();

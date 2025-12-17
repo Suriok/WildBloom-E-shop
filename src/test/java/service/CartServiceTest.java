@@ -57,21 +57,21 @@ public class CartServiceTest {
         testProduct1.setProductId(1L);
         testProduct1.setPrice(new BigDecimal("100.00"));
         testProduct1.setName("Product 1");
-        testProduct1.setInStock(100);
+        testProduct1.setin_stock(100);
         testProduct1.setAvailability(true);
 
         testProduct2 = new Product();
         testProduct2.setProductId(2L);
         testProduct2.setPrice(new BigDecimal("50.00"));
         testProduct2.setName("Product 2");
-        testProduct2.setInStock(50);
+        testProduct2.setin_stock(50);
         testProduct2.setAvailability(true);
 
         testProduct3 = new Product();
         testProduct3.setProductId(3L);
         testProduct3.setPrice(new BigDecimal("25.50"));
         testProduct3.setName("Product 3");
-        testProduct3.setInStock(5);
+        testProduct3.setin_stock(5);
         testProduct3.setAvailability(true);
     }
 
@@ -186,7 +186,7 @@ public class CartServiceTest {
         nullPriceProduct.setProductId(10L);
         nullPriceProduct.setPrice(null);
         nullPriceProduct.setName("Free product");
-        nullPriceProduct.setInStock(100);
+        nullPriceProduct.setin_stock(100);
 
         when(customerDao.find(1L)).thenReturn(testCustomer);
         when(cartDao.findByCustomerWithItems(1L)).thenReturn(testCart);
@@ -223,7 +223,7 @@ public class CartServiceTest {
 
     @Test
     void addItem_WithLargeQuantity_ShouldWork() {
-        testProduct1.setInStock(2000);
+        testProduct1.setin_stock(2000);
 
         when(customerDao.find(1L)).thenReturn(testCustomer);
         when(cartDao.findByCustomerWithItems(1L)).thenReturn(testCart);

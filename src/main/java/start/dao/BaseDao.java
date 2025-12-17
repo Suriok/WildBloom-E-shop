@@ -3,7 +3,9 @@ package start.dao;
 import start.dao.exception.DaoException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.PersistenceException;
+
 import java.util.List;
 import java.util.Objects;
 
@@ -36,6 +38,7 @@ public abstract class BaseDao<T> {
         }
     }
 
+    @Transactional
     public void persist(T entity) {
         Objects.requireNonNull(entity);
         try {
@@ -45,6 +48,7 @@ public abstract class BaseDao<T> {
         }
     }
 
+    @Transactional
     public T update(T entity) {
         Objects.requireNonNull(entity);
         try {
@@ -54,6 +58,7 @@ public abstract class BaseDao<T> {
         }
     }
 
+    @Transactional
     public void remove(T entity) {
         Objects.requireNonNull(entity);
         try {

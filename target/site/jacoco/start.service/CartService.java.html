@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CartService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">WildBloom</a> &gt; <a href="index.source.html" class="el_package">start.service</a> &gt; <span class="el_source">CartService.java</span></div><h1>CartService.java</h1><pre class="source lang-java linenums">package start.service;
+
+import start.dao.CartDao;
+import start.dao.CartItemDao;
+import start.dao.ProductDao;
+import start.dao.CustomerDao;
+import start.model.Cart;
+import start.model.CartItem;
+import start.model.Customer;
+import start.model.Product;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.NoSuchElementException;
+
+import static java.util.Objects.requireNonNull;
+
+@Service
+public class CartService {
+
+    private final CustomerDao customerDao;
+    private final CartDao cartDao;
+    private final ProductDao productDao;
+    private final CartItemDao cartItemDao;
+
+<span class="fc" id="L28">    public CartService(CustomerDao customerDao, CartDao cartDao, ProductDao productDao, CartItemDao cartItemDao) {</span>
+<span class="fc" id="L29">        this.customerDao = customerDao;</span>
+<span class="fc" id="L30">        this.cartDao = cartDao;</span>
+<span class="fc" id="L31">        this.productDao = productDao;</span>
+<span class="fc" id="L32">        this.cartItemDao = cartItemDao;</span>
+<span class="fc" id="L33">    }</span>
+
+    @Transactional
+    public Cart addItem(Long customerId, Long productId, int amount) {
+<span class="fc bfc" id="L37" title="All 2 branches covered.">        if (amount &lt;= 0){</span>
+<span class="fc" id="L38">            throw new IllegalArgumentException(&quot;Množství musí být &gt; 0&quot;);</span>
+        }
+<span class="fc" id="L40">        final Customer z = ensureCustomer(customerId);</span>
+<span class="fc" id="L41">        Cart k = cartDao.findByCustomerWithItems(z.getUserId());</span>
+<span class="fc bfc" id="L42" title="All 2 branches covered.">        if (k == null){</span>
+<span class="fc" id="L43">            k = ensureCart(z);</span>
+        }
+
+<span class="fc" id="L46">        final Product p = ensureproduct(productId);</span>
+
+<span class="pc bpc" id="L48" title="1 of 2 branches missed.">        if (p.getInStock() &lt; amount) {</span>
+<span class="nc" id="L49">            throw new IllegalStateException(&quot;Nedostatek zboží na skladě. Dostupné: &quot; + p.getInStock());</span>
+        }
+
+<span class="fc" id="L52">        CartItem pk = cartItemDao.findByCartAndProduct(k, p);</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        if (pk == null) {</span>
+<span class="fc" id="L54">            pk = new CartItem();</span>
+<span class="fc" id="L55">            pk.setCart(k);</span>
+<span class="fc" id="L56">            pk.setproduct(p);</span>
+<span class="fc" id="L57">            pk.setamount(amount);</span>
+<span class="fc" id="L58">            cartItemDao.persist(pk);</span>
+<span class="fc" id="L59">            k.getitem().add(pk);</span>
+        } else {
+<span class="fc" id="L61">            pk.setamount(pk.getamount() + amount);</span>
+<span class="fc" id="L62">            cartItemDao.update(pk);</span>
+        }
+<span class="fc" id="L64">        recalculateCartTotal(k);</span>
+<span class="fc" id="L65">        cartDao.update(k);</span>
+<span class="fc" id="L66">        return k;</span>
+    }
+
+    @Transactional
+    public Cart updateItemQuantity(Long customerId, Long productId, int newQty) {
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">        if (newQty &lt; 0){</span>
+<span class="nc" id="L72">            throw new IllegalArgumentException(&quot;Amount must be &gt; 0&quot;);</span>
+        }
+<span class="fc" id="L74">        final Customer z = ensureCustomer(customerId);</span>
+<span class="fc" id="L75">        final Cart k = ensureCartFor(z);</span>
+<span class="fc" id="L76">        final Product p = ensureproduct(productId);</span>
+
+<span class="fc" id="L78">        CartItem pk = cartItemDao.findByCartAndProduct(k, p);</span>
+<span class="fc bfc" id="L79" title="All 2 branches covered.">        if (pk == null){</span>
+<span class="fc" id="L80">            throw new NoSuchElementException(&quot;Cart item not found&quot;);</span>
+        }
+
+<span class="pc bpc" id="L83" title="1 of 2 branches missed.">        if (newQty == 0) {</span>
+<span class="fc" id="L84">            k.getitem().remove(pk);</span>
+<span class="fc" id="L85">            cartItemDao.remove(pk);</span>
+        } else {
+<span class="nc" id="L87">            pk.setamount(newQty);</span>
+<span class="nc" id="L88">            cartItemDao.update(pk);</span>
+        }
+<span class="fc" id="L90">        recalculateCartTotal(k);</span>
+<span class="fc" id="L91">        cartDao.update(k);</span>
+<span class="fc" id="L92">        return k;</span>
+    }
+
+    @Transactional
+    public Cart removeItem(Long customerId, Long productId) {
+<span class="fc" id="L97">        final Customer z = ensureCustomer(customerId);</span>
+<span class="fc" id="L98">        final Cart k = ensureCartFor(z);</span>
+<span class="fc" id="L99">        final Product p = ensureproduct(productId);</span>
+
+<span class="fc" id="L101">        CartItem pk = cartItemDao.findByCartAndProduct(k, p);</span>
+<span class="fc bfc" id="L102" title="All 2 branches covered.">        if (pk != null) {</span>
+<span class="fc" id="L103">            k.getitem().remove(pk);</span>
+<span class="fc" id="L104">            cartItemDao.remove(pk);</span>
+<span class="fc" id="L105">            recalculateCartTotal(k);</span>
+<span class="fc" id="L106">            cartDao.update(k);</span>
+        }
+<span class="fc" id="L108">        return k;</span>
+    }
+
+    // helpers
+    private Customer ensureCustomer(Long id) {
+<span class="fc" id="L113">        Customer z = customerDao.find(requireNonNull(id));</span>
+<span class="pc bpc" id="L114" title="1 of 2 branches missed.">        if (z == null){</span>
+<span class="nc" id="L115">            throw new NoSuchElementException(&quot;Customer not found&quot;);</span>
+        }
+<span class="fc" id="L117">        return z;</span>
+    }
+
+    private Cart ensureCart(Customer z) {
+<span class="fc" id="L121">        Cart k = z.getCart();</span>
+<span class="pc bpc" id="L122" title="1 of 2 branches missed.">        if (k == null) {</span>
+<span class="fc" id="L123">            k = new Cart();</span>
+<span class="fc" id="L124">            k.setCustomer(z);</span>
+<span class="fc" id="L125">            cartDao.persist(k);</span>
+<span class="fc" id="L126">            z.setCart(k);</span>
+<span class="fc" id="L127">            customerDao.update(z);</span>
+        }
+<span class="fc" id="L129">        return k;</span>
+    }
+
+    private Cart ensureCartFor(Customer z) {
+<span class="fc" id="L133">        Cart k = cartDao.findByCustomerWithItems(z.getUserId());</span>
+<span class="pc bpc" id="L134" title="1 of 2 branches missed.">        if (k == null){</span>
+<span class="nc" id="L135">            k = ensureCart(z);</span>
+        }
+<span class="fc" id="L137">        return k;</span>
+    }
+
+    private Product ensureproduct(Long productId) {
+<span class="fc" id="L141">        Product p = productDao.find(requireNonNull(productId));</span>
+<span class="fc bfc" id="L142" title="All 2 branches covered.">        if (p == null){</span>
+<span class="fc" id="L143">            throw new NoSuchElementException(&quot;Product not found&quot;);</span>
+        }
+<span class="fc" id="L145">        return p;</span>
+    }
+
+    private void recalculateCartTotal(Cart k) {
+<span class="fc" id="L149">        BigDecimal sum = BigDecimal.ZERO;</span>
+<span class="fc bfc" id="L150" title="All 2 branches covered.">        for (CartItem it : k.getitem()) {</span>
+<span class="fc" id="L151">            BigDecimal price = it.getproduct().getPrice();</span>
+<span class="fc bfc" id="L152" title="All 2 branches covered.">            if (price == null){</span>
+<span class="fc" id="L153">                price = BigDecimal.ZERO;</span>
+            }
+<span class="fc" id="L155">            sum = sum.add(price.multiply(BigDecimal.valueOf(it.getamount())));</span>
+<span class="fc" id="L156">        }</span>
+<span class="fc" id="L157">        k.settotalAmount(sum.setScale(2, RoundingMode.HALF_UP));</span>
+<span class="fc" id="L158">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
