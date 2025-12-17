@@ -156,4 +156,11 @@ public class CartService {
         }
         k.settotalAmount(sum.setScale(2, RoundingMode.HALF_UP));
     }
+
+    @Transactional
+    public Cart getOrCreateCart(Long customerId) {
+        final Customer z = ensureCustomer(customerId);
+        return ensureCartFor(z);
+    }
+
 }
