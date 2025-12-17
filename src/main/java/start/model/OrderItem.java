@@ -14,7 +14,9 @@ import java.math.BigDecimal;
 public class OrderItem {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "orderItem_seq_gen")
+    @SequenceGenerator(name = "orderItem_seq_gen", sequenceName = "orderItem_id_seq", allocationSize = 1)
+    @Column(name = "orderItem_id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

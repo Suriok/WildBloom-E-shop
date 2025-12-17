@@ -42,7 +42,7 @@ public class OrderService {
     }
 
     @Transactional
-    @RolesAllowed("ROLE_ZAKAZNIK")
+    @RolesAllowed("ROLE_CUSTOMER")
     public Order createOrderFromCart(Long customerId) {
         final Customer z = ensureCustomer(customerId);
         final Cart k = ensureCartWithItems(z.getUserId());
@@ -52,8 +52,8 @@ public class OrderService {
 
         for (CartItem it : k.getitem()) {
             Product p = it.getproduct();
-            if (p.getIn_stock() < it.getamount()) {
-                throw new IllegalStateException("Insufficient stock: " + p.getname());
+            if (p.getInStock() < it.getamount()) {
+                throw new IllegalStateException("Insufficient stock: " + p.getName());
             }
         }
 
@@ -74,7 +74,7 @@ public class OrderService {
             orderItemDao.persist(po);
             o.getitem().add(po);
 
-            p.setIn_stock(p.getIn_stock() - it.getamount());
+            p.setInStock(p.getInStock() - it.getamount());
             productDao.update(p);
 
             subtotal = subtotal.add(p.getPrice().multiply(BigDecimal.valueOf(it.getamount())));
@@ -96,7 +96,7 @@ public class OrderService {
     }
 
     @Transactional
-    @RolesAllowed({"ROLE_ZAKAZNIK", "ROLE_ADMINISTRATOR"})
+    @RolesAllowed({"ROLE_CUSTOMER", "ROLE_ADMINISTRATOR"})
     public void cancelOrder(Long customerId, Long orderId) {
         final Customer z = ensureCustomer(customerId);
         Order o = orderDao.find(requireNonNull(orderId));
@@ -115,7 +115,7 @@ public class OrderService {
 
         for (OrderItem po : withItems.getitem()) {
             Product p = po.getproduct();
-            p.setIn_stock(p.getIn_stock() + po.getamount());
+            p.setInStock(p.getInStock() + po.getamount());
             productDao.update(p);
         }
 
@@ -124,7 +124,7 @@ public class OrderService {
     }
 
     @Transactional
-    @RolesAllowed({"ROLE_PRACOVNIK", "ROLE_ADMINISTRATOR"})
+    @RolesAllowed({"ROLE_EMPLOYEE", "ROLE_ADMINISTRATOR"})
     public Order changeStatus(Long orderId, OrderStatus newStatus) {
         Order o = orderDao.find(requireNonNull(orderId));
         if (o == null){

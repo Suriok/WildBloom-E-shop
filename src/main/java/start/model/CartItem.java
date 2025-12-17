@@ -14,7 +14,9 @@ import java.util.Date;
 public class CartItem {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "cartItem_seq_gen")
+    @SequenceGenerator(name = "cartItem_seq_gen", sequenceName = "cartItem_id_seq", allocationSize = 1)
+    @Column(name = "cartItem_id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
