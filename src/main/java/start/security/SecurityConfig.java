@@ -84,6 +84,7 @@ public class SecurityConfig {
                                 "/error"
                         ).permitAll()
 
+                        .requestMatchers("/cart.html").hasRole("CUSTOMER")
                         .requestMatchers("/my-orders.html").hasRole("CUSTOMER")
                         .requestMatchers("/orders-management.html").hasAnyRole("EMPLOYEE", "ADMINISTRATOR")
 
@@ -117,8 +118,9 @@ public class SecurityConfig {
 
             String target;
             if (roles.contains("ROLE_CUSTOMER")) {
-                target = "/my-orders.html";
-            } else if (roles.contains("ROLE_EMPLOYEE") || roles.contains("ROLE_ADMINISTRATOR")) {
+                target = "/";
+            }
+            else if (roles.contains("ROLE_EMPLOYEE") || roles.contains("ROLE_ADMINISTRATOR")) {
                 target = "/orders-management.html";
             } else {
                 target = "/";

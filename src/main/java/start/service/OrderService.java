@@ -42,7 +42,7 @@ public class OrderService {
     }
 
     @Transactional
-    @RolesAllowed("ROLE_CUSTOMER")
+    @RolesAllowed("CUSTOMER")
     public Order createOrderFromCart(Long customerId) {
         final Customer z = ensureCustomer(customerId);
         final Cart k = ensureCartWithItems(z.getUserId());
@@ -96,7 +96,7 @@ public class OrderService {
     }
 
     @Transactional
-    @RolesAllowed({"ROLE_CUSTOMER", "ROLE_ADMINISTRATOR"})
+    @RolesAllowed({"CUSTOMER", "ADMINISTRATOR"})
     public void cancelOrder(Long customerId, Long orderId) {
         final Customer z = ensureCustomer(customerId);
         Order o = orderDao.find(requireNonNull(orderId));
@@ -124,7 +124,7 @@ public class OrderService {
     }
 
     @Transactional
-    @RolesAllowed({"ROLE_EMPLOYEE", "ROLE_ADMINISTRATOR"})
+    @RolesAllowed({"EMPLOYEE", "ADMINISTRATOR"})
     public Order changeStatus(Long orderId, OrderStatus newStatus) {
         Order o = orderDao.find(requireNonNull(orderId));
         if (o == null){
@@ -137,6 +137,28 @@ public class OrderService {
         }
         o.setstatus(newStatus);
         return orderDao.update(o);
+    }
+
+    @Transactional(readOnly = true)
+    @RolesAllowed({"CUSTOMER", "ADMINISTRATOR"})
+    public List<Order> findOrdersForCustomer(Long customerId) {
+        final Customer z = ensureCustomer(customerId);
+        return orderDao.findBycustomerId(z.getUserId());
+    }
+
+    @Transactional(readOnly = true)
+    @RolesAllowed({"CUSTOMER", "ADMINISTRATOR"})
+    public Order getOrderForCustomerWithItems(Long customerId, Long orderId) {
+        final Customer z = ensureCustomer(customerId);
+
+        Order o = orderDao.findByIdWithItems(requireNonNull(orderId));
+        if (o == null) {
+            throw new NoSuchElementException("Order not found");
+        }
+        if (!o.getCustomer().getUserId().equals(z.getUserId())) {
+            throw new IllegalStateException("Order does not belong to user");
+        }
+        return o;
     }
 
     // helpers
