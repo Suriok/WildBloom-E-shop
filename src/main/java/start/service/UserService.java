@@ -7,11 +7,7 @@ import start.dao.UserDao;
 import start.dto.CreateAdministratorDto;
 import start.dto.CreateEmployeeDto;
 import start.dto.UserDto;
-import start.model.Administrator;
-import start.model.Cart;
-import start.model.Customer;
-import start.model.Employee;
-import start.model.UserRole;
+import start.model.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -96,5 +92,13 @@ public class UserService {
         a.setrights(dto.getRights());
 
         administratorDao.persist(a);
+    }
+
+    public User getByEmail(String email) {
+        User u = userDao.findByEmail(email);
+        if (u == null) {
+            throw new IllegalArgumentException("User not found: " + email);
+        }
+        return u;
     }
 }
