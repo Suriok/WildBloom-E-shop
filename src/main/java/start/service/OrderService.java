@@ -161,6 +161,12 @@ public class OrderService {
         return o;
     }
 
+    @Transactional(readOnly = true)
+    @RolesAllowed({"EMPLOYEE", "ADMINISTRATOR"})
+    public List<Order> findAll() {
+        return orderDao.findAll();
+    }
+
     // helpers
     private Customer ensureCustomer(Long id) {
         Customer z = customerDao.find(requireNonNull(id));

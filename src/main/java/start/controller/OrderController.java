@@ -84,15 +84,19 @@ public class OrderController {
         public BigDecimal totalAmount;
         public BigDecimal dph;
         public BigDecimal dorights;
+        public String customerName;
+        public String customerEmail;
 
         public OrderSummaryResponse(Long orderId, String date, OrderStatus status,
-                                    BigDecimal totalAmount, BigDecimal dph, BigDecimal dorights) {
+                                    BigDecimal totalAmount, BigDecimal dph, BigDecimal dorights, String customerName, String customerEmail) {
             this.orderId = orderId;
             this.date = date;
             this.status = status;
             this.totalAmount = totalAmount;
             this.dph = dph;
             this.dorights = dorights;
+            this.customerName = customerName;
+            this.customerEmail = customerEmail;
         }
     }
 
@@ -123,6 +127,14 @@ public class OrderController {
     }
 
     private static OrderSummaryResponse toSummary(Order o) {
+        String cName = "Guest";
+        String cEmail = "No email";
+
+        if (o.getCustomer() != null) {
+            cName = o.getCustomer().getName();
+            cEmail = o.getCustomer().getEmail();
+        }
+
         String iso = (o.getdate() == null) ? null : Instant.ofEpochMilli(o.getdate().getTime()).toString();
         return new OrderSummaryResponse(
                 o.getorderId(),
@@ -130,7 +142,9 @@ public class OrderController {
                 o.getstatus(),
                 o.getTotalAmount(),
                 o.getDph(),
-                o.getDorights()
+                o.getDorights(),
+                cName,
+                cEmail
         );
     }
 
@@ -214,5 +228,15 @@ public class OrderController {
     @PreAuthorize("hasAnyRole('EMPLOYEE','ADMINISTRATOR')")
     public ResponseEntity<Order> updateStatus(@PathVariable Long id, @RequestParam OrderStatus status) {
         return ResponseEntity.ok(orderService.changeStatus(id, status));
+    }
+
+    @GetMapping
+    @PreAuthorize("hasAnyRole('EMPLOYEE', 'ADMINISTRATOR')")
+    public ResponseEntity<List<OrderSummaryResponse>> getAllOrders() {
+        List<OrderSummaryResponse> list = orderService.findAll()
+                .stream()
+                .map(OrderController::toSummary)
+                .toList();
+        return ResponseEntity.ok(list);
     }
 }
