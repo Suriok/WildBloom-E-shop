@@ -3,10 +3,10 @@ INSERT INTO category (category_id, name) VALUES (2, 'Spring Flowers') ON CONFLIC
 INSERT INTO category (category_id, name) VALUES (3, 'Bouquets') ON CONFLICT DO NOTHING;
 INSERT INTO category (category_id, name) VALUES (4, 'Exotic') ON CONFLICT DO NOTHING;
 
--- Обновляем последовательность категорий
-ALTER SEQUENCE category_id_seq RESTART WITH 5;
 
--- ИСПРАВЛЕННЫЕ ПРОДУКТЫ (Добавлено ON CONFLICT DO NOTHING)
+SELECT setval('category_id_seq', (SELECT MAX(category_id) FROM category));
+
+
 INSERT INTO product (product_id, name, description, price, in_stock, availability, category_id)
 VALUES (1, 'Red Roses Bouquet', 'Classic red roses.', 1200.00, 50, true, 1)
     ON CONFLICT DO NOTHING;
@@ -31,5 +31,5 @@ INSERT INTO product (product_id, name, description, price, in_stock, availabilit
 VALUES (6, 'Birthday Special', 'Large colorful bouquet.', 1500.00, 10, true, 3)
     ON CONFLICT DO NOTHING;
 
--- Обновляем последовательность продуктов
-ALTER SEQUENCE product_id_seq RESTART WITH 50;
+
+SELECT setval('product_id_seq', (SELECT MAX(product_id) FROM product));
