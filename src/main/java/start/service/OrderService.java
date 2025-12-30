@@ -163,6 +163,16 @@ public class OrderService {
 
     @Transactional(readOnly = true)
     @RolesAllowed({"EMPLOYEE", "ADMINISTRATOR"})
+    public Order getOrderWithItemsForAdmin(Long orderId) {
+        Order o = orderDao.findByIdWithItems(requireNonNull(orderId));
+        if (o == null) {
+            throw new NoSuchElementException("Order not found");
+        }
+        return o;
+    }
+
+    @Transactional(readOnly = true)
+    @RolesAllowed({"EMPLOYEE", "ADMINISTRATOR"})
     public List<Order> findAll() {
         return orderDao.findAll();
     }

@@ -165,7 +165,7 @@ public class OrderController {
         return userService.getByEmail(email).getUserId();
     }
 
-    // ===== API =====
+    // API
 
     @PostMapping
     @PreAuthorize("hasRole('CUSTOMER')")
@@ -229,6 +229,22 @@ public class OrderController {
     public ResponseEntity<Order> updateStatus(@PathVariable Long id, @RequestParam OrderStatus status) {
         return ResponseEntity.ok(orderService.changeStatus(id, status));
     }
+
+    @GetMapping("/{id}/details")
+    @PreAuthorize("hasAnyRole('EMPLOYEE','ADMINISTRATOR')")
+    public ResponseEntity<?> orderDetailsForStaff(@PathVariable Long id) {
+        try {
+            Order o = orderService.getOrderWithItemsForAdmin(id);
+            OrderDetailResponse dto = new OrderDetailResponse(
+                    toSummary(o),
+                    o.getitem().stream().map(OrderController::toItem).toList()
+            );
+            return ResponseEntity.ok(dto);
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
 
     @GetMapping
     @PreAuthorize("hasAnyRole('EMPLOYEE', 'ADMINISTRATOR')")
