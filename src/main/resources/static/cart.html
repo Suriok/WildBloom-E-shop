@@ -150,7 +150,8 @@
         <td class="py-3 pr-4">
           <input
             class="qty w-20 rounded-lg border border-gray-300 px-2 py-1"
-            type="number" min="0" value="${it.amount}"
+            type="number" min="0" max="${it.availableStock}"
+            value="${it.amount}"
             data-product-id="${it.productId}"
           />
         </td>

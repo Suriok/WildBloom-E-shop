@@ -35,7 +35,7 @@ public class CartService {
     @Transactional
     public Cart addItem(Long customerId, Long productId, int amount) {
         if (amount <= 0){
-            throw new IllegalArgumentException("Množství musí být > 0");
+            throw new IllegalArgumentException("Amount must be > 0");
         }
         final Customer z = ensureCustomer(customerId);
         Cart k = cartDao.findByCustomerWithItems(z.getUserId());
@@ -46,7 +46,7 @@ public class CartService {
         final Product p = ensureproduct(productId);
 
         if (p.getin_stock() < amount) {
-            throw new IllegalStateException("Nedostatek zboží na skladě. Dostupné: " + p.getin_stock());
+            throw new IllegalStateException("Lack of goods in stock. Available:: " + p.getin_stock());
         }
 
         CartItem pk = cartItemDao.findByCartAndProduct(k, p);
@@ -58,7 +58,16 @@ public class CartService {
             cartItemDao.persist(pk);
             k.getitem().add(pk);
         } else {
-            pk.setamount(pk.getamount() + amount);
+            int desired = pk.getamount() + amount;
+
+            if (p.getin_stock() < desired) {
+                throw new IllegalStateException(
+                        "Lack of goods in stock. You already have in cart: " + pk.getamount()
+                                + ", available: " + p.getin_stock()
+                );
+            }
+
+            pk.setamount(desired);
             cartItemDao.update(pk);
         }
         recalculateCartTotal(k);
@@ -78,6 +87,12 @@ public class CartService {
         CartItem pk = cartItemDao.findByCartAndProduct(k, p);
         if (pk == null){
             throw new NoSuchElementException("Cart item not found");
+        }
+
+        if (newQty > p.getin_stock()) {
+            throw new IllegalStateException(
+                    "Lack of goods in stock. Available: " + p.getin_stock()
+            );
         }
 
         if (newQty == 0) {
