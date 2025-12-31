@@ -51,6 +51,8 @@ package start.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.*;
 import start.model.Order;
 import start.model.OrderItem;
@@ -62,6 +64,7 @@ import java.math.BigDecimal;
 import java.security.Principal;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 @RestController
@@ -234,7 +237,7 @@ public class OrderController {
     @PreAuthorize("hasAnyRole('EMPLOYEE','ADMINISTRATOR')")
     public ResponseEntity<?> orderDetailsForStaff(@PathVariable Long id) {
         try {
-            Order o = orderService.getOrderWithItemsForAdmin(id);
+            Order o = orderService.getOrderWithItems(id);
             OrderDetailResponse dto = new OrderDetailResponse(
                     toSummary(o),
                     o.getitem().stream().map(OrderController::toItem).toList()
@@ -245,6 +248,24 @@ public class OrderController {
         }
     }
 
+    @GetMapping("/whoami")
+    @PreAuthorize("hasAnyRole('EMPLOYEE','ADMINISTRATOR')")
+    public Map<String, Object> whoami(Authentication auth) {
+        boolean isAdmin = auth.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(a -> a.equals("ROLE_ADMINISTRATOR"));
+
+        boolean isEmp = auth.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(a -> a.equals("ROLE_EMPLOYEE"));
+
+        String role = isAdmin ? "ADMINISTRATOR" : (isEmp ? "EMPLOYEE" : "UNKNOWN");
+
+        return Map.of(
+                "email", auth.getName(),
+                "role", role
+        );
+    }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('EMPLOYEE', 'ADMINISTRATOR')")
