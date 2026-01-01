@@ -13,7 +13,11 @@
         <div class="flex justify-between items-center py-4">
             <div class="flex items-center gap-2">
                 <h1 class="text-2xl font-bold text-green-600 tracking-tight">WildBloom 🌸</h1>
-                <span class="bg-gray-100 text-gray-500 text-xs px-2 py-1 rounded-full uppercase font-semibold tracking-wide">Admin</span>
+                <span id="roleBadge"
+                      class="bg-gray-100 text-gray-500 text-xs px-2 py-1 rounded-full uppercase font-semibold tracking-wide">
+                    Staff
+                </span>
+
             </div>
 
             <form id="logoutForm"  method="post" action="/logout">
@@ -25,11 +29,15 @@
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
     <div class="bg-white p-2 rounded-xl shadow-sm inline-flex gap-2 border border-gray-100">
-        <a href="admin.html" class="px-6 py-2.5 rounded-lg text-gray-600 font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
-            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+        <a id="inventoryLink"
+           href="admin.html"
+           class="hidden px-6 py-2.5 rounded-lg text-gray-600 font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
+            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+            </svg>
             Inventory
         </a>
-
         <a href="orders-management.html" class="px-6 py-2.5 rounded-lg bg-green-600 text-white font-medium shadow-md flex items-center gap-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
             Orders Management
@@ -81,74 +89,262 @@
             <span class="text-xs text-gray-400">Showing recent orders</span>
         </div>
     </div>
+    <div id="detailsModal" class="hidden fixed inset-0 bg-black/40 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-6">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900">Order details</h3>
+                    <p id="detailsHeader" class="text-sm text-gray-600 mt-1"></p>
+                </div>
+                <button
+                        onclick="closeDetails()"
+                        class="px-3 py-2 rounded-lg border border-red-200 text-red-700 bg-red-50 hover:bg-red-100 hover:border-red-300 transition">
+                    Close
+                </button>
+
+            </div>
+
+            <div id="detailsBody" class="mt-4 text-sm text-gray-700">
+                Loading...
+            </div>
+        </div>
+    </div>
+
 </main>
 
 <script>
+    const NEXT = {
+        "WAITING_FOR_CONFIRMATION": ["CONFIRMED", "CANCELLED"],
+        "CONFIRMED": ["IN_TRANSIT", "CANCELLED"],
+        "IN_TRANSIT": ["DELIVERED"],
+        "DELIVERED": [],
+        "CANCELLED": []
+    };
+
+    function statusPillClass(status) {
+        switch (status) {
+            case "WAITING_FOR_CONFIRMATION": return "bg-blue-100 text-blue-700";
+            case "CONFIRMED": return "bg-yellow-100 text-yellow-800";
+            case "IN_TRANSIT": return "bg-purple-100 text-purple-800";
+            case "DELIVERED": return "bg-green-100 text-green-700";
+            case "CANCELLED": return "bg-red-100 text-red-700";
+            default: return "bg-gray-100 text-gray-600";
+        }
+    }
+
+    function fmtMoney(v) {
+        const n = Number(v);
+        if (Number.isFinite(n)) return n.toFixed(2);
+        return (v ?? "0.00");
+    }
+
     async function loadOrders() {
-        const tbody = document.getElementById('ordersTableBody');
-        tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">Refreshing...</td></tr>';
+        const tbody = document.getElementById("ordersTableBody");
+        tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">Refreshing...</td></tr>`;
 
         try {
-            const res = await fetch('/api/orders');
-
-            if (!res.ok) throw new Error("Failed to fetch orders");
+            const res = await fetch("/api/orders", { credentials: "same-origin" });
+            if (!res.ok) {
+                const t = await res.text();
+                throw new Error(`HTTP ${res.status} ${t}`);
+            }
 
             const orders = await res.json();
+            tbody.innerHTML = "";
 
-            tbody.innerHTML = '';
-
-            if(orders.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">No orders found.</td></tr>';
+            if (!orders || orders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-10 text-center text-gray-500">No orders found.</td></tr>`;
                 return;
             }
 
             orders.forEach(order => {
-                let statusClass = "bg-gray-100 text-gray-600";
-                if(order.status === 'COMPLETED') statusClass = "bg-green-100 text-green-700";
-                if(order.status === 'NEW') statusClass = "bg-blue-100 text-blue-700";
-                if(order.status === 'CANCELLED') statusClass = "bg-red-100 text-red-700";
+                const dateStr = order.date ? new Date(order.date).toLocaleString() : "-";
+                const status = order.status;
+                const statusClass = statusPillClass(status);
 
-                const dateStr = order.date ? new Date(order.date).toLocaleDateString() : "No date";
+                const next = NEXT[status] || [];
+                const canChange = next.length > 0;
+
+                const options = [
+                    `<option value="${status}" selected>${status}</option>`,
+                    ...next.map(s => `<option value="${s}">${s}</option>`)
+                ].join("");
 
                 const row = `
-                    <tr class="hover:bg-gray-50 transition-colors">
-                        <td class="px-6 py-4 text-sm font-medium text-gray-900">#${order.orderId}</td>
-                        <td class="px-6 py-4 text-sm text-gray-600">${dateStr}</td>
+          <tr class="hover:bg-gray-50 transition-colors">
+            <td class="px-6 py-4 text-sm font-medium text-gray-900">#${order.orderId}</td>
+            <td class="px-6 py-4 text-sm text-gray-600">${dateStr}</td>
 
-                        <td class="px-6 py-4">
-                            <div class="text-sm font-bold text-gray-900">${order.customerName || 'Unknown'}</div>
-                            <div class="text-xs text-gray-500">${order.customerEmail || ''}</div>
-                        </td>
+            <td class="px-6 py-4">
+              <div class="text-sm font-bold text-gray-900">${order.customerName || "Unknown"}</div>
+              <div class="text-xs text-gray-500">${order.customerEmail || ""}</div>
+            </td>
 
-                        <td class="px-6 py-4 text-sm font-bold text-green-600">${order.totalAmount} CZK</td>
-                        <td class="px-6 py-4">
-                            <span class="px-3 py-1 rounded-full text-xs font-semibold ${statusClass}">
-                                ${order.status}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 text-right">
-                             <button class="text-xs font-semibold bg-green-50 text-green-700 px-3 py-1.5 rounded-lg hover:bg-green-100 border border-green-200 transition-colors">
-                                View Details
-                            </button>
-                        </td>
-                    </tr>
-                `;
-                tbody.innerHTML += row;
+            <td class="px-6 py-4 text-sm font-bold text-green-600">${fmtMoney(order.totalAmount)} CZK</td>
+
+            <td class="px-6 py-4">
+              <span class="px-3 py-1 rounded-full text-xs font-semibold ${statusClass}">
+                ${status}
+              </span>
+
+              <div class="mt-2 flex items-center gap-2">
+                <select id="st-${order.orderId}"
+                        class="text-xs border border-gray-200 rounded-lg px-2 py-1 ${canChange ? "" : "opacity-50"}"
+                        ${canChange ? "" : "disabled"}>
+                  ${options}
+                </select>
+
+                <button onclick="changeStatus(${order.orderId})"
+                        class="text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors
+                          ${canChange
+                    ? "bg-white text-gray-700 border-gray-200 hover:border-green-500 hover:text-green-600"
+                    : "bg-gray-50 text-gray-400 border-gray-100 cursor-not-allowed"}"
+                        ${canChange ? "" : "disabled"}>
+                  Update
+                </button>
+              </div>
+            </td>
+
+            <td class="px-6 py-4 text-right">
+              <button onclick="viewDetails(${order.orderId})"
+                      class="text-xs font-semibold bg-green-50 text-green-700 px-3 py-1.5 rounded-lg hover:bg-green-100 border border-green-200 transition-colors">
+                View Details
+              </button>
+            </td>
+          </tr>
+        `;
+                tbody.insertAdjacentHTML("beforeend", row);
             });
 
         } catch (e) {
             console.error(e);
             tbody.innerHTML = `
-                <tr>
-                    <td colspan="6" class="px-6 py-8 text-center text-red-500">
-                        Error loading orders. Please try again later.
-                    </td>
-                </tr>
-            `;
+        <tr>
+          <td colspan="6" class="px-6 py-8 text-center text-red-500">
+            Error loading orders: ${e.message}
+          </td>
+        </tr>
+      `;
         }
     }
 
+    async function initRoleUI() {
+        try {
+            const res = await fetch('/api/orders/whoami');
+            if (!res.ok) throw new Error('whoami failed');
+
+            const me = await res.json();
+
+            const badge = document.getElementById('roleBadge');
+            const inv = document.getElementById('inventoryLink');
+
+            if (me.role === 'ADMINISTRATOR') {
+                badge.textContent = 'Admin';
+                inv.classList.remove('hidden');
+            } else {
+                badge.textContent = 'Employee';
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    initRoleUI();
     loadOrders();
+
+    async function changeStatus(orderId) {
+        const sel = document.getElementById(`st-${orderId}`);
+        const status = sel.value;
+
+        try {
+            const res = await fetch(`/api/orders/${orderId}/status?status=${encodeURIComponent(status)}`, {
+                method: 'PATCH'
+            });
+
+            if (!res.ok) {
+                const t = await res.text();
+                throw new Error(t || res.status);
+            }
+
+            await loadOrders();
+        } catch (e) {
+            alert("Cannot change status: " + e.message);
+        }
+    }
+    window.changeStatus = changeStatus;
+
+
+    function closeDetails() {
+        document.getElementById('detailsModal').classList.add('hidden');
+    }
+
+    async function viewDetails(orderId) {
+        const modal = document.getElementById('detailsModal');
+        const header = document.getElementById('detailsHeader');
+        const body = document.getElementById('detailsBody');
+
+        modal.classList.remove('hidden');
+        header.textContent = `#${orderId}`;
+        body.innerHTML = 'Loading...';
+
+        try {
+            const res = await fetch(`/api/orders/${orderId}/details`);
+            if (!res.ok) {
+                const t = await res.text();
+                throw new Error(t || res.status);
+            }
+            const data = await res.json();
+
+            const o = data.order;
+            const items = data.items || [];
+
+            header.textContent = `Order #${o.orderId} • ${o.customerName} (${o.customerEmail}) • Status: ${o.status}`;
+
+            if (items.length === 0) {
+                body.innerHTML = `<div class="text-gray-500">No items.</div>`;
+                return;
+            }
+
+            body.innerHTML = `
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-left text-gray-500">
+                <th class="py-2">Product</th>
+                <th class="py-2">Qty</th>
+                <th class="py-2">Price</th>
+                <th class="py-2">Line total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${items.map(it => `
+                <tr class="border-t">
+                  <td class="py-2">${it.name}</td>
+                  <td class="py-2">${it.amount}</td>
+                  <td class="py-2">${it.price} CZK</td>
+                  <td class="py-2 font-semibold">${it.lineTotal} CZK</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="mt-4 flex justify-end text-sm">
+          <div class="space-y-1">
+            <div class="flex justify-between gap-8"><span class="text-gray-600">DPH</span><span class="font-semibold">${o.dph ?? 0} CZK</span></div>
+            <div class="flex justify-between gap-8"><span class="text-gray-600">Shipping</span><span class="font-semibold">${o.dorights ?? 0} CZK</span></div>
+            <div class="flex justify-between gap-8 border-t pt-2"><span class="font-bold">Total</span><span class="font-bold text-green-700">${o.totalAmount ?? 0} CZK</span></div>
+          </div>
+        </div>
+      `;
+        } catch (e) {
+            body.innerHTML = `<div class="text-red-600">Error: ${e.message}</div>`;
+        }
+    }
+
+    window.viewDetails = viewDetails;
+    window.closeDetails = closeDetails;
+
 </script>
 
 </body>

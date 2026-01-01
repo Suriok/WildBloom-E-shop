@@ -105,7 +105,8 @@ public class CartController {
                     p.getDescription(),
                     price.setScale(2, RoundingMode.HALF_UP),
                     amount,
-                    lineTotal
+                    lineTotal,
+                    p.getin_stock()
             ));
             count += amount;
         }
@@ -113,7 +114,7 @@ public class CartController {
         return new CartResponse(cart.getcartId(), items, count, subtotal, vat, shipping, total);
     }
 
-    // --- DTOs ---
+    //  DTOs
 
     public static class AddItemRequest {
         public Long productId;
@@ -131,25 +132,27 @@ public class CartController {
         public BigDecimal price;
         public int amount;
         public BigDecimal lineTotal;
+        public int availableStock;
 
-        public CartItemResponse(Long productId, String name, String description, BigDecimal price, int amount, BigDecimal lineTotal) {
+        public CartItemResponse(Long productId, String name, String description, BigDecimal price, int amount, BigDecimal lineTotal, int availableStock) {
             this.productId = productId;
             this.name = name;
             this.description = description;
             this.price = price;
             this.amount = amount;
             this.lineTotal = lineTotal;
+            this.availableStock = availableStock;
         }
     }
 
     public static class CartResponse {
         public Long cartId;
         public List<CartItemResponse> items;
-        public int itemsCount;          // общее кол-во штук (сумма amount)
-        public BigDecimal subtotal;     // сумма товаров
-        public BigDecimal vat;          // 21%
-        public BigDecimal shipping;     // 50 если не пусто
-        public BigDecimal total;        // итого
+        public int itemsCount;
+        public BigDecimal subtotal;
+        public BigDecimal vat;
+        public BigDecimal shipping;
+        public BigDecimal total;
 
         public CartResponse(Long cartId, List<CartItemResponse> items, int itemsCount,
                             BigDecimal subtotal, BigDecimal vat, BigDecimal shipping, BigDecimal total) {

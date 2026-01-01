@@ -86,6 +86,7 @@ public class SecurityConfig {
 
                         .requestMatchers("/cart.html").hasRole("CUSTOMER")
                         .requestMatchers("/my-orders.html").hasRole("CUSTOMER")
+                        .requestMatchers("/admin.html").hasRole("ADMINISTRATOR")
                         .requestMatchers("/orders-management.html").hasAnyRole("EMPLOYEE", "ADMINISTRATOR")
 
                         .anyRequest().authenticated()
@@ -120,11 +121,16 @@ public class SecurityConfig {
             if (roles.contains("ROLE_CUSTOMER")) {
                 target = "/";
             }
-            else if (roles.contains("ROLE_EMPLOYEE") || roles.contains("ROLE_ADMINISTRATOR")) {
+            else if (roles.contains("ROLE_ADMINISTRATOR")) {
+                target = "/admin.html";
+            }
+            else if (roles.contains("ROLE_EMPLOYEE")) {
                 target = "/orders-management.html";
-            } else {
+            }
+            else {
                 target = "/";
             }
+
 
             response.sendRedirect(request.getContextPath() + target);
         };
