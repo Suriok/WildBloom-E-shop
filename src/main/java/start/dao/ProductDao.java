@@ -19,11 +19,30 @@ public class ProductDao extends BaseDao<Product> {
         super(Product.class);
     }
 
+    @Override
+    public List<Product> findAll() {
+        try {
+            CriteriaBuilder cb = em.getCriteriaBuilder();
+            CriteriaQuery<Product> cq = cb.createQuery(Product.class);
+            Root<Product> root = cq.from(Product.class);
+
+            cq.where(cb.greaterThan(root.get(Product_.in_stock), 0));
+
+            return em.createQuery(cq).getResultList();
+        } catch (PersistenceException e) {
+            throw new DaoException("Error finding all available products", e);
+        }
+    }
+
     public List<Product> findByCategory(Category categoryArg) {
         try {
             CriteriaBuilder cb = em.getCriteriaBuilder();
             CriteriaQuery<Product> cq = cb.createQuery(Product.class);
             Root<Product> root = cq.from(Product.class);
+
+            Predicate catMatch = cb.equal(root.get(Product_.category), categoryArg);
+            Predicate stockMatch = cb.greaterThan(root.get(Product_.in_stock), 0);
+
             cq.where(cb.equal(root.get(Product_.category), categoryArg));
 
             return em.createQuery(cq).getResultList();
@@ -40,9 +59,10 @@ public class ProductDao extends BaseDao<Product> {
 
             List<Predicate> predicates = new ArrayList<>();
 
+            predicates.add(cb.greaterThan(root.get(Product_.in_stock), 0));
+
             if (nameFragment != null && !nameFragment.trim().isEmpty()) {
                 String searchStr = nameFragment.toLowerCase().trim();
-
                 Predicate nameMatch = cb.like(cb.lower(root.get(Product_.name)), "%" + searchStr + "%");
 
                 BigDecimal priceValue = null;
@@ -58,9 +78,19 @@ public class ProductDao extends BaseDao<Product> {
                     predicates.add(nameMatch);
                 }
             }
+
+            if (minPrice != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get(Product_.price), minPrice));
+            }
+
+            if (maxPrice != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get(Product_.price), maxPrice));
+            }
+
             if (!predicates.isEmpty()) {
                 cq.where(predicates.toArray(new Predicate[0]));
             }
+
             return em.createQuery(cq).getResultList();
 
         } catch (PersistenceException e) {

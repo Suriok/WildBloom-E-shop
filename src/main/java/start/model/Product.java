@@ -82,6 +82,7 @@ public class Product {
 
     public void setin_stock(int in_stock) {
         this.in_stock = in_stock;
+        this.availability = (in_stock > 0);
     }
 
     public boolean isAvailability() {

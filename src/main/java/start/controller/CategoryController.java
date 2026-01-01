@@ -1,6 +1,7 @@
 package start.controller;
 
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import start.dao.CategoryDao;
 import start.model.Category;
