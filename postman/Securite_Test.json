@@ -1,0 +1,243 @@
+{
+    "info": {
+        "_postman_id": "security-rbac-test",
+        "name": "WildBloom: Security & Access Control (Hacker Test)",
+        "description": "1. Registers a new user with low privileges (Customer).\n2. Authenticates as the newly registered user.\n3. Attempts to create a product (Admin action).\n4. Attempts to create a new administrator account (Admin action).\n5. Attempts to view all system orders (Admin action).",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "1. Register 'Hacker' (Low Privilege User)",
+            "event": [
+                {
+                    "listen": "prerequest",
+                    "script": {
+                        "exec": [
+                            "const randomInt = Math.floor(Math.random() * 100000);",
+                            "const email = `hacker_${randomInt}@evil.com`;",
+                            "const password = \"iAmHacker123\";",
+                            "",
+                            "pm.collectionVariables.set(\"hacker_email\", email);",
+                            "pm.collectionVariables.set(\"hacker_password\", password);",
+                            "console.log(\"Generated Bad Actor: \" + email);"
+                        ],
+                        "type": "text/javascript"
+                    }
+                },
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Hacker Registered (201)\", () => pm.response.to.have.status(201));"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"name\": \"Bad Actor\",\n    \"email\": \"{{hacker_email}}\",\n    \"password\": \"{{hacker_password}}\",\n    \"phone\": \"000000000\",\n    \"address\": \"Dark Web\"\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/auth/register",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "auth",
+                        "register"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "2. Login as Hacker",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Login Successful\", () => pm.expect(pm.response.code).to.be.oneOf([200, 302]));",
+                            "pm.test(\"Session Cookie Obtained\", () => pm.expect(pm.cookies.has('JSESSIONID')).to.be.true);"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/x-www-form-urlencoded"
+                    }
+                ],
+                "body": {
+                    "mode": "urlencoded",
+                    "urlencoded": [
+                        {
+                            "key": "username",
+                            "value": "{{hacker_email}}",
+                            "type": "text"
+                        },
+                        {
+                            "key": "password",
+                            "value": "{{hacker_password}}",
+                            "type": "text"
+                        }
+                    ]
+                },
+                "url": {
+                    "raw": "{{base_url}}/login",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "login"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "3. ATTACK: Try to Create Product",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Security Check: Create Product Blocked (403)\", () => {",
+                            "    pm.response.to.have.status(403);",
+                            "});",
+                            "",
+                            "if (pm.response.code === 200 || pm.response.code === 201) {",
+                            "    pm.expect.fail(\"CRITICAL SECURITY FAIL: Customer was able to create a product!\");",
+                            "}"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"name\": \"Hacked Product\",\n  \"description\": \"I should not be able to create this\",\n  \"price\": 0.01,\n  \"inStock\": 1000,\n  \"category\": { \"categoryId\": 1 }\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/api/products",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "products"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "4. ATTACK: Try to Create Admin",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Security Check: Create Admin Blocked (403)\", () => {",
+                            "    pm.response.to.have.status(403);",
+                            "});",
+                            "",
+                            "if (pm.response.code === 200 || pm.response.code === 201) {",
+                            "    pm.expect.fail(\"CRITICAL SECURITY FAIL: Customer was able to create a new Administrator!\");",
+                            "}"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"name\": \"Fake Admin\",\n    \"email\": \"fake_admin@wildbloom.cz\",\n    \"password\": \"hacked123\",\n    \"phone\": \"666\",\n    \"address\": \"Void\",\n    \"rights\": \"FULL\"\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/auth/admins",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "auth",
+                        "admins"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "5. ATTACK: View All System Orders",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Security Check: View All Orders Blocked (403)\", () => {",
+                            "    pm.response.to.have.status(403);",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/api/orders",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "orders"
+                    ]
+                }
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:8080",
+            "type": "string"
+        },
+        {
+            "key": "hacker_email",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "hacker_password",
+            "value": "",
+            "type": "string"
+        }
+    ]
+}
