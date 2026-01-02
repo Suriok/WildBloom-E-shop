@@ -1,0 +1,335 @@
+{
+	"info": {
+		"_postman_id": "admin",
+		"name": "WildBloom E-shop: Admin Test",
+		"description": "1. **Authentication:** Logs in as an Administrator to establish a secure session.\n2. **Category Management:** Creates a dynamically named category to ensure data uniqueness and avoid conflicts.\n3. **Product Creation:** Creates a new product linked to the previously created category, explicitly setting price and stock level (50).\n4. **Data Verification:** Searches for the created product by name to confirm database persistence and validates that critical fields (Price, Stock/in_stock) are saved correctly.\n5. **Cleanup:** Logs out to invalidate the session.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Admin Login (Session Init)",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Clear cookies to ensure a clean session state",
+							"const jar = pm.cookies.jar();",
+							"jar.clear(pm.request.url, function (error) {",
+							"    console.log(\"Cookies cleared for fresh login.\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// 1. Status Code Check",
+							"pm.test(\"Login successful (200 or 302)\", () => {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 302]);",
+							"});",
+							"",
+							"// 2. Security Check: Session Cookie",
+							"pm.test(\"Critical: JSESSIONID cookie received\", () => {",
+							"    pm.expect(pm.cookies.has('JSESSIONID')).to.be.true;",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "username",
+							"value": "{{admin_email}}",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "{{admin_password}}",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{base_url}}/login",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"login"
+					]
+				}
+			}
+		},
+		{
+			"name": "2. Create Category (Dynamic)",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Generate a random ID to ensure Category Name is unique",
+							"const randomInt = Math.floor(Math.random() * 100000);",
+							"const catName = `Season Collection ${randomInt}`;",
+							"",
+							"// Save to variables",
+							"pm.collectionVariables.set(\"generated_category_name\", catName);",
+							"console.log(`Generated Category: ${catName}`);"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// 1. Status Check",
+							"pm.test(\"Category created (Status 200/201)\", () => {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+							"});",
+							"",
+							"// 2. Logic: Extract ID for the next step",
+							"try {",
+							"    const jsonData = pm.response.json();",
+							"    ",
+							"    // Try to find ID (adjust 'categoryId' based on your exact Entity JSON)",
+							"    const catId = jsonData.categoryId || jsonData.id;",
+							"    ",
+							"    if (catId) {",
+							"        pm.collectionVariables.set(\"new_category_id\", catId);",
+							"        pm.test(\"Category ID returned correctly\", () => pm.expect(catId).to.be.a('number'));",
+							"        console.log(`Category Created with ID: ${catId}`);",
+							"    } else {",
+							"        // If API returns void, we use a fallback or fail",
+							"        console.warn(\"No Category ID in response. Using default or manual check needed.\");",
+							"    }",
+							"} catch (e) {",
+							"    console.warn(\"Response was not JSON. If your API returns void, verification must happen via GET.\");",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"{{generated_category_name}}\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/categories",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"categories"
+					]
+				}
+			}
+		},
+		{
+			"name": "3. Create Product (Linked to Category)",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Generate unique product data",
+							"const randomInt = Math.floor(Math.random() * 100000);",
+							"const prodName = `Admin Special Rose ${randomInt}`;",
+							"const catId = pm.collectionVariables.get(\"new_category_id\");",
+							"",
+							"// Fallback if Category step failed or didn't return ID",
+							"const finalCatId = catId ? catId : 1;",
+							"",
+							"pm.collectionVariables.set(\"generated_product_name\", prodName);",
+							"pm.collectionVariables.set(\"final_category_id\", finalCatId);"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Your Controller returns void, so we only check status 200",
+							"pm.test(\"Product creation successful (Status 200)\", () => {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// Performance Check",
+							"pm.test(\"Server processed request quickly (<1000ms)\", () => {",
+							"    pm.expect(pm.response.responseTime).to.be.below(1000);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"{{generated_product_name}}\",\n  \"description\": \"Created via Automated Admin Test\",\n  \"price\": 599.00,\n  \"in_stock\": 50,\n  \"category\": {\n    \"categoryId\": {{final_category_id}}\n  }\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/products",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"products"
+					]
+				}
+			}
+		},
+		{
+			"name": "4. Verify Product Persistence (Search)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+							"",
+							"const jsonData = pm.response.json();",
+							"const targetName = pm.collectionVariables.get(\"generated_product_name\");",
+							"",
+							"pm.test(\"Search returns results\", () => {",
+							"    pm.expect(jsonData.length).to.be.above(0);",
+							"});",
+							"",
+							"pm.test(\"Result contains the created product with correct STOCK\", () => {",
+							"    // Find the specific product we just created",
+							"    const found = jsonData.find(p => p.name === targetName);",
+							"    pm.expect(found).to.not.be.undefined;",
+							"    ",
+							"    if(found) {",
+							"        console.log(\"Verified Product ID: \" + found.productId);",
+							"        // Проверка цены",
+							"        pm.expect(found.price).to.eql(599.00);",
+							"        // Проверка количества (Stock)",
+							"        // Проверяем оба варианта написания, чтобы тест был надежнее",
+							"        const stock = (found.in_stock !== undefined) ? found.in_stock : found.inStock;",
+							"        pm.expect(stock).to.eql(50);",
+							"    }",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/products/search?name={{generated_product_name}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"products",
+						"search"
+					],
+					"query": [
+						{
+							"key": "name",
+							"value": "{{generated_product_name}}"
+						}
+					]
+				}
+			}
+		},
+		{
+			"name": "5. Logout",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Logout successful\", () => {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 302]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/logout",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"logout"
+					]
+				}
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "admin_email",
+			"value": "admin@wildbloom.cz",
+			"type": "string"
+		},
+		{
+			"key": "admin_password",
+			"value": "admin123",
+			"type": "string"
+		},
+		{
+			"key": "generated_category_name",
+			"value": ""
+		},
+		{
+			"key": "new_category_id",
+			"value": ""
+		},
+		{
+			"key": "generated_product_name",
+			"value": ""
+		},
+		{
+			"key": "final_category_id",
+			"value": ""
+		}
+	]
+}
