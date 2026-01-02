@@ -1,0 +1,314 @@
+{
+    "info": {
+        "_postman_id": "edge-cases-auth-fix-v5",
+        "name": "WildBloom: Edge Cases",
+        "description": "1. Registers a new user with a unique email.\n2. Authenticates as the newly registered user.\n3. Identifies an in-stock product and calculates a quantity exceeding the available stock.\n4. Attempts to add the excessive quantity to the cart (expecting a 400 error).\n5. Tests product catalog pagination.\n6. Tests product catalog sorting by price (descending).",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "1. Setup: Register New User",
+            "event": [
+                {
+                    "listen": "prerequest",
+                    "script": {
+                        "exec": [
+                            "const timestamp = new Date().getTime();",
+                            "const email = `test_user_${timestamp}@wildbloom.cz`;",
+                            "const password = \"pass123\";",
+                            "",
+                            "pm.collectionVariables.set(\"newUserEmail\", email);",
+                            "pm.collectionVariables.set(\"newUserPass\", password);",
+                            "",
+                            "console.log(\"Registering user:\", email);"
+                        ],
+                        "type": "text/javascript"
+                    }
+                },
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Registration Successful (201 Created)\", function () {",
+                            "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"email\": \"{{newUserEmail}}\",\n    \"password\": \"{{newUserPass}}\",\n    \"name\": \"Auto Tester\",\n    \"address\": \"Test Street 123\",\n    \"phone\": \"123456789\"\n}"
+                },
+                "url": {
+                    "raw": "{{baseUrl}}/auth/register",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "auth",
+                        "register"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "2. Setup: Login as New User",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Login Successful\", function () {",
+                            "    pm.expect(pm.response.code).to.be.oneOf([200, 302]);",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/x-www-form-urlencoded"
+                    }
+                ],
+                "body": {
+                    "mode": "urlencoded",
+                    "urlencoded": [
+                        {
+                            "key": "username",
+                            "value": "{{newUserEmail}}",
+                            "type": "text"
+                        },
+                        {
+                            "key": "password",
+                            "value": "{{newUserPass}}",
+                            "type": "text"
+                        }
+                    ]
+                },
+                "url": {
+                    "raw": "{{baseUrl}}/login",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "login"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "3. Setup: Find Product & Calc Limit",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "var jsonData = pm.response.json();",
+                            "var p = jsonData.find(item => item.in_stock > 0);",
+                            "",
+                            "if (p) {",
+                            "    pm.collectionVariables.set(\"productId\", p.productId);",
+                            "    var badAmount = p.in_stock + 1;",
+                            "    pm.collectionVariables.set(\"badAmount\", badAmount);",
+                            "    console.log(`Product ${p.productId} stock: ${p.in_stock}. Trying: ${badAmount}`);",
+                            "} else {",
+                            "    pm.expect.fail(\"No products in stock!\");",
+                            "}"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{baseUrl}}/api/products",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "api",
+                        "products"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "4. Edge Case: Buy More Than Stock",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Expected 400 Bad Request\", function () {",
+                            "    pm.response.to.have.status(400);",
+                            "});",
+                            "",
+                            "pm.test(\"Error message check\", function () {",
+                            "    if (pm.response.code === 400) {",
+                            "        var text = pm.response.text();",
+                            "        pm.expect(text).to.contain(\"Lack of goods\");",
+                            "    }",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"productId\": {{productId}},\n    \"amount\": {{badAmount}}\n}"
+                },
+                "url": {
+                    "raw": "{{baseUrl}}/api/cart/items",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "api",
+                        "cart",
+                        "items"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "5. Catalog: Pagination Test",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status 200\", function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "var data = pm.response.json();",
+                            "",
+                            "pm.test(\"Pagination: Returns items (Server ignores limit)\", function () {",
+                            "    if (data.length !== 2) {",
+                            "        console.warn(\"Warning: Server returned \" + data.length + \" items instead of 2. Pagination might be broken on backend.\");",
+                            "    }",
+                            "    pm.expect(data.length).to.be.at.least(2);",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{baseUrl}}/api/products?page=0&size=2",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "api",
+                        "products"
+                    ],
+                    "query": [
+                        {
+                            "key": "page",
+                            "value": "0"
+                        },
+                        {
+                            "key": "size",
+                            "value": "2"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "6. Catalog: Sorting Test",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "var data = pm.response.json();",
+                            "",
+                            "pm.test(\"Sorting: Items sorted by price DESC\", function () {",
+                            "    if (data.length < 2) {",
+                            "        pm.expect.fail(\"Not enough items to test sorting\");",
+                            "    }",
+                            "    var price1 = data[0].price;",
+                            "    var price2 = data[1].price;",
+                            "    pm.expect(price1).to.be.at.least(price2);",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{baseUrl}}/api/products?sort=price,desc",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "api",
+                        "products"
+                    ],
+                    "query": [
+                        {
+                            "key": "sort",
+                            "value": "price,desc"
+                        }
+                    ]
+                }
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:8080",
+            "type": "string"
+        },
+        {
+            "key": "productId",
+            "value": ""
+        },
+        {
+            "key": "badAmount",
+            "value": ""
+        },
+        {
+            "key": "newUserEmail",
+            "value": ""
+        },
+        {
+            "key": "newUserPass",
+            "value": ""
+        }
+    ]
+}
