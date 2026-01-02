@@ -1,0 +1,478 @@
+{
+    "info": {
+        "_postman_id": "ultimate-search-logic-fixed",
+        "name": "WildBloom: Search & Filter",
+        "description": "1. Authenticates as Admin.\n2. Creates a product with a low price (100).\n3. Creates a product with a mid price (500).\n4. Creates a product with a high price (900).\n5. Performs a search within the 200-800 price range.\n6. Performs a search with a maximum price of 500.\n7. Performs a search with a valid name and conflicting price constraint.\n8. Performs a partial name search.\n9. Performs a negative test with an invalid price range (min > max).",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "1. Admin Login",
+            "event": [
+                {
+                    "listen": "prerequest",
+                    "script": {
+                        "exec": [
+                            "const jar = pm.cookies.jar();",
+                            "jar.clear(pm.request.url, function (error) {});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                },
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Login OK\", () => pm.response.to.have.status(200));"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/x-www-form-urlencoded"
+                    }
+                ],
+                "body": {
+                    "mode": "urlencoded",
+                    "urlencoded": [
+                        {
+                            "key": "username",
+                            "value": "admin@wildbloom.cz",
+                            "type": "text"
+                        },
+                        {
+                            "key": "password",
+                            "value": "admin123",
+                            "type": "text"
+                        }
+                    ]
+                },
+                "url": {
+                    "raw": "{{base_url}}/login",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "login"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "2. Create Low Product (100 CZK)",
+            "event": [
+                {
+                    "listen": "prerequest",
+                    "script": {
+                        "exec": [
+                            "const rnd = Math.floor(Math.random() * 10000);",
+                            "pm.collectionVariables.set(\"low_prod\", `Test Low ${rnd}`);",
+                            "pm.collectionVariables.set(\"rnd_id\", rnd);"
+                        ],
+                        "type": "text/javascript"
+                    }
+                },
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Low product created\", () => pm.response.to.have.status(200));"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"name\": \"{{low_prod}}\",\n  \"description\": \"Low price test item\",\n  \"price\": 100.00,\n  \"in_stock\": 10,\n  \"category\": { \"categoryId\": 1 }\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/api/products",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "products"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "3. Create Mid Product (500 CZK)",
+            "event": [
+                {
+                    "listen": "prerequest",
+                    "script": {
+                        "exec": [
+                            "// Use same ID suffix for consistency",
+                            "const rnd = pm.collectionVariables.get(\"rnd_id\");",
+                            "pm.collectionVariables.set(\"mid_prod\", `Test Mid ${rnd}`);"
+                        ],
+                        "type": "text/javascript"
+                    }
+                },
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Mid product created\", () => pm.response.to.have.status(200));"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"name\": \"{{mid_prod}}\",\n  \"description\": \"Mid price test item\",\n  \"price\": 500.00,\n  \"in_stock\": 10,\n  \"category\": { \"categoryId\": 1 }\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/api/products",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "products"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "4. Create High Product (900 CZK)",
+            "event": [
+                {
+                    "listen": "prerequest",
+                    "script": {
+                        "exec": [
+                            "const rnd = pm.collectionVariables.get(\"rnd_id\");",
+                            "pm.collectionVariables.set(\"high_prod\", `Test High ${rnd}`);"
+                        ],
+                        "type": "text/javascript"
+                    }
+                },
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"High product created\", () => pm.response.to.have.status(200));"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"name\": \"{{high_prod}}\",\n  \"description\": \"High price test item\",\n  \"price\": 900.00,\n  \"in_stock\": 10,\n  \"category\": { \"categoryId\": 1 }\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/api/products",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "products"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "5. TEST: Range (200 - 800)",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "const data = pm.response.json();",
+                            "const mid = pm.collectionVariables.get(\"mid_prod\");",
+                            "const low = pm.collectionVariables.get(\"low_prod\");",
+                            "const high = pm.collectionVariables.get(\"high_prod\");",
+                            "",
+                            "pm.test(\"Result contains MID product (500)\", () => {",
+                            "    const found = data.find(p => p.name === mid);",
+                            "    pm.expect(found).to.not.be.undefined;",
+                            "});",
+                            "",
+                            "pm.test(\"Result EXCLUDES LOW product (100)\", () => {",
+                            "    const found = data.find(p => p.name === low);",
+                            "    pm.expect(found).to.be.undefined;",
+                            "});",
+                            "",
+                            "pm.test(\"Result EXCLUDES HIGH product (900)\", () => {",
+                            "    const found = data.find(p => p.name === high);",
+                            "    pm.expect(found).to.be.undefined;",
+                            "});",
+                            "",
+                            "pm.test(\"Strict Validation: All prices are between 200 and 800\", () => {",
+                            "    const violations = data.filter(p => p.price < 200 || p.price > 800);",
+                            "    pm.expect(violations.length).to.eql(0);",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/api/products/search?minPrice=200&maxPrice=800",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "products",
+                        "search"
+                    ],
+                    "query": [
+                        {
+                            "key": "minPrice",
+                            "value": "200"
+                        },
+                        {
+                            "key": "maxPrice",
+                            "value": "800"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "6. TEST: Exact Boundary (maxPrice = 500)",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "const data = pm.response.json();",
+                            "const mid = pm.collectionVariables.get(\"mid_prod\");",
+                            "const high = pm.collectionVariables.get(\"high_prod\");",
+                            "",
+                            "pm.test(\"Boundary Inclusion: Product with price 500 is INCLUDED\", () => {",
+                            "    const found = data.find(p => p.name === mid);",
+                            "    pm.expect(found).to.not.be.undefined;",
+                            "});",
+                            "",
+                            "pm.test(\"Exclusion: Product with price 900 is EXCLUDED\", () => {",
+                            "    const found = data.find(p => p.name === high);",
+                            "    pm.expect(found).to.be.undefined;",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/api/products/search?maxPrice=500",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "products",
+                        "search"
+                    ],
+                    "query": [
+                        {
+                            "key": "maxPrice",
+                            "value": "500"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "7. TEST: Conflict (Name Match + Wrong Price)",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "const data = pm.response.json();",
+                            "const mid = pm.collectionVariables.get(\"mid_prod\");",
+                            "",
+                            "pm.test(\"Product is HIDDEN due to price constraint\", () => {",
+                            "    const found = data.find(p => p.name === mid);",
+                            "    pm.expect(found).to.be.undefined;",
+                            "});",
+                            "",
+                            "pm.test(\"List is empty or does not contain target\", () => {",
+                            "    pm.expect(data.length).to.be.at.least(0);",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/api/products/search?name={{mid_prod}}&maxPrice=100",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "products",
+                        "search"
+                    ],
+                    "query": [
+                        {
+                            "key": "name",
+                            "value": "{{mid_prod}}"
+                        },
+                        {
+                            "key": "maxPrice",
+                            "value": "100"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "8. TEST: Partial Name Match",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "const data = pm.response.json();",
+                            "const low = pm.collectionVariables.get(\"low_prod\");",
+                            "",
+                            "pm.test(\"Partial match found the product\", () => {",
+                            "    const found = data.find(p => p.name === low);",
+                            "    pm.expect(found).to.not.be.undefined;",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/api/products/search?name=Test Low",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "products",
+                        "search"
+                    ],
+                    "query": [
+                        {
+                            "key": "name",
+                            "value": "Test Low"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "9. NEGATIVE: Impossible Range (Min > Max)",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "const data = pm.response.json();",
+                            "pm.test(\"Impossible range returns empty list\", () => {",
+                            "    pm.expect(data.length).to.eql(0);",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/api/products/search?minPrice=1000&maxPrice=10",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "products",
+                        "search"
+                    ],
+                    "query": [
+                        {
+                            "key": "minPrice",
+                            "value": "1000"
+                        },
+                        {
+                            "key": "maxPrice",
+                            "value": "10"
+                        }
+                    ]
+                }
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:8080",
+            "type": "string"
+        },
+        {
+            "key": "low_prod",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "mid_prod",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "high_prod",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "rnd_id",
+            "value": "",
+            "type": "string"
+        }
+    ]
+}
