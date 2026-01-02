@@ -54,7 +54,7 @@ Frontend je tvořen statickými HTML stránkami s JavaScriptem (fetch na REST AP
 Pro lokální běh je potřeba nastavit (příklad):
 
 ```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/wildbloom
+spring.datasource.url=jdbc:postgresql://localhost:8080/wildbloom
 spring.datasource.username=your_username
 spring.datasource.password=your_password
 spring.datasource.driver-class-name=org.postgresql.Driver
@@ -117,6 +117,73 @@ Nebo přes IDE spustit hlavní třídu `WildBloomApplication`.
 Aplikace běží na `http://localhost:8080/` (výchozí port Spring Boot).  
 Spring Boot používá **embedded Tomcat**, takže není potřeba instalovat externí aplikační server.
 
+---
+
+## Spuštění testů
+
+### Unit testy (JUnit)
+
+Pro spuštění unit testů použijte Maven:
+
+```bash
+mvn test
+```
+
+Nebo pro spuštění konkrétního testu:
+
+```bash
+mvn test -Dtest=NázevTestu
+```
+
+Testy se nacházejí v `src/test/java/` a zahrnují:
+- **DAO testy:** `ProductDaoTest`, `CategoryDaoTest`
+- **Service testy:** `CartServiceTest`, `OrderServiceTest`, `UserServiceTest`
+
+---
+
+### API testy pomocí Postman
+
+Pro testování REST API endpointů je připravena sada Postman kolekcí.
+
+#### Požadavky
+
+1. **Instalace Postman:**
+   - Stáhněte a nainstalujte Postman z oficiálních stránek: https://www.postman.com/downloads/
+   - Postman je dostupný pro Windows, macOS a Linux
+
+#### Import kolekcí
+
+V projektu jsou připraveny následující Postman kolekce v adresáři `postman/`:
+
+- `Admin_test.json` – testy administrátorských funkcí
+- `Cancell_Test.json` – testy zrušení objednávek
+- `Cart_Mechanic_Test.json` – testy košíku
+- `EdgeCase.json` – testy hraničních případů
+- `Order_Status___Security.json` – testy stavů objednávek a bezpečnosti
+- `Search___Filter_Test.json` – testy vyhledávání a filtrování
+- `Securite_Test.json` – testy bezpečnosti
+- `User_Test.json` – testy uživatelských funkcí
+
+**Postup importu:**
+
+1. Otevřete Postman
+2. Klikněte na **Import** (tlačítko v levém horním rohu)
+3. Vyberte **File** a zvolte JSON soubory z adresáře `postman/`
+   - Můžete importovat všechny soubory najednou (vyberte více souborů)
+4. Kolekce se zobrazí v levém panelu Postman
+
+#### Spuštění testů
+
+**Důležité:** Před spuštěním testů musí být aplikace spuštěná na `http://localhost:8080/`
+
+**Postup:**
+
+1. Ujistěte se, že aplikace běží (`mvn spring-boot:run`)
+2. V Postman otevřete požadovanou kolekci
+3. Klikněte na **Run** (tlačítko vedle názvu kolekce)
+4. V okně **Collection Runner**:
+   - Klikněte na **Run [název kolekce]**
+5. Postman spustí všechny requesty v kolekci a zobrazí výsledky
 ---
 
 ## Testovací účty (vytváří se při startu přes DefaultUsersInitializer)
