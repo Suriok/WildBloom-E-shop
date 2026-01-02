@@ -1,0 +1,188 @@
+{
+	"info": {
+		"_postman_id": "cart-manipulation-test",
+		"name": "WildBloom: Cart Mechanics",
+		"description": "This test performs the following sequence of actions:\n1. Register and login a new user.\n2. Find a product with sufficient stock.\n3. Add 1 unit of the product to the cart.\n4. Update the item quantity to 5 using a PUT request.\n5. Remove the item from the cart using a DELETE request and verify the cart is empty.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Register & Login",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"const randomInt = Math.floor(Math.random() * 100000);",
+							"pm.collectionVariables.set(\"current_email\", `cart_tester_${randomInt}@example.com`);",
+							"pm.collectionVariables.set(\"current_password\", \"pass123\");"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Registered\", () => pm.response.to.have.status(201));",
+							"",
+							"pm.sendRequest({",
+							"    url: pm.collectionVariables.get(\"base_url\") + \"/login\",",
+							"    method: 'POST',",
+							"    header: {'Content-Type': 'application/x-www-form-urlencoded'},",
+							"    body: {",
+							"        mode: 'urlencoded',",
+							"        urlencoded: [",
+							"            {key: \"username\", value: pm.collectionVariables.get(\"current_email\")},",
+							"            {key: \"password\", value: pm.collectionVariables.get(\"current_password\")}",
+							"        ]",
+							"    }",
+							"}, function (err, res) {",
+							"    pm.test(\"Login cookie set\", () => pm.expect(res).to.have.property('cookies'));",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"Cart Tester\",\n    \"email\": \"{{current_email}}\",\n    \"password\": \"{{current_password}}\",\n    \"phone\": \"123\",\n    \"address\": \"Street\"\n}"
+				},
+				"url": "{{base_url}}/auth/register"
+			}
+		},
+		{
+			"name": "2. Get Product",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const data = pm.response.json();",
+							"const product = data.find(p => p.in_stock > 5);",
+							"if(product) {",
+							"    pm.collectionVariables.set(\"prod_id\", product.productId);",
+							"    pm.collectionVariables.set(\"prod_price\", product.price);",
+							"} else { pm.expect.fail(\"No product with enough stock found\"); }"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"url": "{{base_url}}/api/products"
+			}
+		},
+		{
+			"name": "3. Add 1 Item",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"productId\": {{prod_id}}, \"amount\": 1}"
+				},
+				"url": "{{base_url}}/api/cart/items"
+			}
+		},
+		{
+			"name": "4. UPDATE Quantity to 5 (PUT)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const cart = pm.response.json();",
+							"const price = parseFloat(pm.collectionVariables.get(\"prod_price\"));",
+							"pm.test(\"Quantity updated to 5\", () => {",
+							"    const item = cart.items.find(i => i.productId == pm.collectionVariables.get(\"prod_id\"));",
+							"    pm.expect(item.amount).to.eql(5);",
+							"});",
+							"pm.test(\"Subtotal recalculated correctly\", () => {",
+							"    pm.expect(cart.subtotal).to.eql(price * 5);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"amount\": 5}"
+				},
+				"url": "{{base_url}}/api/cart/items/{{prod_id}}"
+			}
+		},
+		{
+			"name": "5. REMOVE Item (DELETE)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const cart = pm.response.json();",
+							"pm.test(\"Item removed from list\", () => {",
+							"    const item = cart.items.find(i => i.productId == pm.collectionVariables.get(\"prod_id\"));",
+							"    pm.expect(item).to.be.undefined;",
+							"});",
+							"pm.test(\"Cart is empty\", () => {",
+							"    pm.expect(cart.itemsCount).to.eql(0);",
+							"    pm.expect(cart.total).to.eql(0);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"url": "{{base_url}}/api/cart/items/{{prod_id}}"
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080"
+		},
+		{
+			"key": "current_email",
+			"value": ""
+		},
+		{
+			"key": "current_password",
+			"value": ""
+		},
+		{
+			"key": "prod_id",
+			"value": ""
+		},
+		{
+			"key": "prod_price",
+			"value": ""
+		}
+	]
+}
