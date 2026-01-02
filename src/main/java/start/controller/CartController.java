@@ -8,6 +8,8 @@ import start.model.CartItem;
 import start.model.Product;
 import start.service.CartService;
 import start.service.UserService;
+import start.service.exception.BusinessException;
+import start.service.exception.NotFoundException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -46,7 +48,9 @@ public class CartController {
             int amount = (req.amount == null ? 1 : req.amount);
             Cart cart = cartService.addItem(customerId, req.productId, amount);
             return ResponseEntity.ok(toDto(cart));
-        } catch (RuntimeException e) {
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (BusinessException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
@@ -61,7 +65,9 @@ public class CartController {
             int amount = (req.amount == null ? 1 : req.amount);
             Cart cart = cartService.updateItemQuantity(customerId, productId, amount);
             return ResponseEntity.ok(toDto(cart));
-        } catch (RuntimeException e) {
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (BusinessException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
@@ -73,7 +79,9 @@ public class CartController {
             Long customerId = currentUserId(principal);
             Cart cart = cartService.removeItem(customerId, productId);
             return ResponseEntity.ok(toDto(cart));
-        } catch (RuntimeException e) {
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (BusinessException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }

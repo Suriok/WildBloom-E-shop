@@ -8,6 +8,7 @@ import start.dto.CreateAdministratorDto;
 import start.dto.CreateEmployeeDto;
 import start.dto.UserDto;
 import start.model.*;
+import start.service.exception.NotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -97,7 +98,7 @@ public class UserService {
     public User getByEmail(String email) {
         User u = userDao.findByEmail(email);
         if (u == null) {
-            throw new IllegalArgumentException("User not found: " + email);
+            throw new NotFoundException("User", email);
         }
         return u;
     }

@@ -5,6 +5,8 @@ import org.springframework.transaction.annotation.Transactional;
 import jakarta.annotation.security.RolesAllowed;
 import start.dao.*;
 import start.model.*;
+import start.service.exception.BusinessException;
+import start.service.exception.NotFoundException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -47,13 +49,13 @@ public class OrderService {
         final Customer z = ensureCustomer(customerId);
         final Cart k = ensureCartWithItems(z.getUserId());
         if (k.getitem().isEmpty()){
-            throw new IllegalStateException("Cart is empty");
+            throw new BusinessException("Cart is empty");
         }
 
         for (CartItem it : k.getitem()) {
             Product p = it.getproduct();
             if (p.getin_stock() < it.getamount()) {
-                throw new IllegalStateException("Insufficient stock: " + p.getName());
+                throw new BusinessException("Insufficient stock: " + p.getName());
             }
         }
 
@@ -101,13 +103,13 @@ public class OrderService {
         final Customer z = ensureCustomer(customerId);
         Order o = orderDao.find(requireNonNull(orderId));
         if (o == null){
-            throw new NoSuchElementException("Order not found");
+            throw new NotFoundException("Order", orderId);
         }
         if (!o.getCustomer().getUserId().equals(z.getUserId())) {
-            throw new IllegalStateException("Order does not belong to user");
+            throw new BusinessException("Order does not belong to user");
         }
         if (!(o.getstatus() == OrderStatus.WAITING_FOR_CONFIRMATION || o.getstatus() == OrderStatus.CONFIRMED)) {
-            throw new IllegalStateException("Cancellation not allowed for status: " + o.getstatus());
+            throw new BusinessException("Cancellation not allowed for status: " + o.getstatus());
         }
 
         Order withItems = orderDao.findByIdWithItems(orderId);
@@ -128,12 +130,12 @@ public class OrderService {
     public Order changeStatus(Long orderId, OrderStatus newStatus) {
         Order o = orderDao.find(requireNonNull(orderId));
         if (o == null){
-            throw new NoSuchElementException("Order not found");
+            throw new NotFoundException("Order", orderId);
         }
 
         final OrderStatus from = o.getstatus();
         if (!ALLOWED.getOrDefault(from, Set.of()).contains(newStatus)) {
-            throw new IllegalStateException("Invalid status transition: " + from + " -> " + newStatus);
+            throw new BusinessException("Invalid status transition: " + from + " -> " + newStatus);
         }
         o.setstatus(newStatus);
         return orderDao.update(o);
@@ -153,10 +155,10 @@ public class OrderService {
 
         Order o = orderDao.findByIdWithItems(requireNonNull(orderId));
         if (o == null) {
-            throw new NoSuchElementException("Order not found");
+            throw new NotFoundException("Order", orderId);
         }
         if (!o.getCustomer().getUserId().equals(z.getUserId())) {
-            throw new IllegalStateException("Order does not belong to user");
+            throw new BusinessException("Order does not belong to user");
         }
         return o;
     }
@@ -166,7 +168,7 @@ public class OrderService {
     public Order getOrderWithItems(Long orderId) {
         Order o = orderDao.findByIdWithItems(requireNonNull(orderId));
         if (o == null) {
-            throw new NoSuchElementException("Order not found");
+            throw new NotFoundException("Order", orderId);
         }
         return o;
     }
@@ -181,7 +183,7 @@ public class OrderService {
     private Customer ensureCustomer(Long id) {
         Customer z = customerDao.find(requireNonNull(id));
         if (z == null){
-            throw new NoSuchElementException("Customer not found");
+            throw new NotFoundException("Customer", id);
         }
         return z;
     }
@@ -189,7 +191,7 @@ public class OrderService {
     private Cart ensureCartWithItems(Long customerId) {
         Cart k = cartDao.findByCustomerWithItems(requireNonNull(customerId));
         if (k == null){
-            throw new NoSuchElementException("Cart not found");
+            throw new NotFoundException("Cart", customerId);
         }
         return k;
     }

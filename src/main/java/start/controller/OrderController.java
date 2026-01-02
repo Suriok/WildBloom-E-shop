@@ -11,13 +11,14 @@ import start.model.OrderItem;
 import start.model.OrderStatus;
 import start.service.OrderService;
 import start.service.UserService;
+import start.service.exception.BusinessException;
+import start.service.exception.NotFoundException;
 
 import java.math.BigDecimal;
 import java.security.Principal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -132,10 +133,10 @@ public class OrderController {
             Long userId = currentUserId(principal);
             Order created = orderService.createOrderFromCart(userId);
             return ResponseEntity.ok(toSummary(created));
-        } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        } catch (NoSuchElementException e) {
+        } catch (NotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (BusinessException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
 
@@ -161,10 +162,10 @@ public class OrderController {
                     o.getitem().stream().map(OrderController::toItem).toList()
             );
             return ResponseEntity.ok(dto);
-        } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
-        } catch (NoSuchElementException e) {
+        } catch (NotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (BusinessException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         }
     }
 
@@ -175,10 +176,10 @@ public class OrderController {
             Long userId = currentUserId(principal);
             orderService.cancelOrder(userId, id);
             return ResponseEntity.ok().build();
-        } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        } catch (NoSuchElementException e) {
+        } catch (NotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (BusinessException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
 
@@ -199,7 +200,7 @@ public class OrderController {
                     o.getitem().stream().map(OrderController::toItem).toList()
             );
             return ResponseEntity.ok(dto);
-        } catch (NoSuchElementException e) {
+        } catch (NotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }

@@ -9,13 +9,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import start.dao.*;
 import start.model.*;
 import start.service.OrderService;
+import start.service.exception.BusinessException;
+import start.service.exception.NotFoundException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -71,13 +72,13 @@ public class OrderServiceTest {
     void createOrderFromCart_WithEmptyCart_ShouldThrow() {
         when(customerDao.find(1L)).thenReturn(testCustomer);
         when(cartDao.findByCustomerWithItems(1L)).thenReturn(testCart);
-        assertThrows(IllegalStateException.class, () -> orderService.createOrderFromCart(1L));
+        assertThrows(BusinessException.class, () -> orderService.createOrderFromCart(1L));
     }
 
     @Test
     void createOrderFromCart_WithNonExistentCustomer_ShouldThrow() {
         when(customerDao.find(999L)).thenReturn(null);
-        assertThrows(NoSuchElementException.class, () -> orderService.createOrderFromCart(999L));
+        assertThrows(NotFoundException.class, () -> orderService.createOrderFromCart(999L));
     }
 
     @Test
@@ -88,7 +89,7 @@ public class OrderServiceTest {
         testCart.getitem().add(item);
         when(customerDao.find(1L)).thenReturn(testCustomer);
         when(cartDao.findByCustomerWithItems(1L)).thenReturn(testCart);
-        assertThrows(IllegalStateException.class, () -> orderService.createOrderFromCart(1L));
+        assertThrows(BusinessException.class, () -> orderService.createOrderFromCart(1L));
     }
 
     @Test
@@ -152,7 +153,7 @@ public class OrderServiceTest {
     void cancelOrder_WithNonExistentOrder_ShouldThrow() {
         when(customerDao.find(1L)).thenReturn(testCustomer);
         when(orderDao.find(999L)).thenReturn(null);
-        assertThrows(NoSuchElementException.class, () -> orderService.cancelOrder(1L, 999L));
+        assertThrows(NotFoundException.class, () -> orderService.cancelOrder(1L, 999L));
     }
 
     @Test
@@ -165,7 +166,7 @@ public class OrderServiceTest {
         order.setstatus(OrderStatus.WAITING_FOR_CONFIRMATION);
         when(customerDao.find(1L)).thenReturn(testCustomer);
         when(orderDao.find(10L)).thenReturn(order);
-        assertThrows(IllegalStateException.class, () -> orderService.cancelOrder(1L, 10L));
+        assertThrows(BusinessException.class, () -> orderService.cancelOrder(1L, 10L));
     }
 
     @Test
@@ -176,7 +177,7 @@ public class OrderServiceTest {
         order.setstatus(OrderStatus.DELIVERED);
         when(customerDao.find(1L)).thenReturn(testCustomer);
         when(orderDao.find(10L)).thenReturn(order);
-        assertThrows(IllegalStateException.class, () -> orderService.cancelOrder(1L, 10L));
+        assertThrows(BusinessException.class, () -> orderService.cancelOrder(1L, 10L));
     }
 
     @Test
@@ -217,7 +218,7 @@ public class OrderServiceTest {
     @Test
     void changeStatus_WithNonExistentOrder_ShouldThrow() {
         when(orderDao.find(999L)).thenReturn(null);
-        assertThrows(NoSuchElementException.class,
+        assertThrows(NotFoundException.class,
                 () -> orderService.changeStatus(999L, OrderStatus.CONFIRMED));
     }
 
@@ -227,7 +228,7 @@ public class OrderServiceTest {
         order.setorderId(10L);
         order.setstatus(OrderStatus.WAITING_FOR_CONFIRMATION);
         when(orderDao.find(10L)).thenReturn(order);
-        assertThrows(IllegalStateException.class,
+        assertThrows(BusinessException.class,
                 () -> orderService.changeStatus(10L, OrderStatus.DELIVERED));
     }
 
@@ -259,7 +260,7 @@ public class OrderServiceTest {
         order.setorderId(10L);
         order.setstatus(OrderStatus.DELIVERED);
         when(orderDao.find(10L)).thenReturn(order);
-        assertThrows(IllegalStateException.class,
+        assertThrows(BusinessException.class,
                 () -> orderService.changeStatus(10L, OrderStatus.CANCELLED));
     }
 
@@ -269,7 +270,7 @@ public class OrderServiceTest {
         order.setorderId(10L);
         order.setstatus(OrderStatus.CANCELLED);
         when(orderDao.find(10L)).thenReturn(order);
-        assertThrows(IllegalStateException.class,
+        assertThrows(BusinessException.class,
                 () -> orderService.changeStatus(10L, OrderStatus.CONFIRMED));
     }
 

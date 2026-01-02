@@ -8,12 +8,13 @@ import start.model.Cart;
 import start.model.CartItem;
 import start.model.Customer;
 import start.model.Product;
+import start.service.exception.BusinessException;
+import start.service.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.NoSuchElementException;
 
 import static java.util.Objects.requireNonNull;
 
@@ -46,7 +47,7 @@ public class CartService {
         final Product p = ensureproduct(productId);
 
         if (p.getin_stock() < amount) {
-            throw new IllegalStateException("Lack of goods in stock. Available:: " + p.getin_stock());
+            throw new BusinessException("Lack of goods in stock. Available: " + p.getin_stock());
         }
 
         CartItem pk = cartItemDao.findByCartAndProduct(k, p);
@@ -61,7 +62,7 @@ public class CartService {
             int desired = pk.getamount() + amount;
 
             if (p.getin_stock() < desired) {
-                throw new IllegalStateException(
+                throw new BusinessException(
                         "Lack of goods in stock. You already have in cart: " + pk.getamount()
                                 + ", available: " + p.getin_stock()
                 );
@@ -86,11 +87,11 @@ public class CartService {
 
         CartItem pk = cartItemDao.findByCartAndProduct(k, p);
         if (pk == null){
-            throw new NoSuchElementException("Cart item not found");
+            throw new NotFoundException("Cart item", "cartId=" + k.getcartId() + ", productId=" + productId);
         }
 
         if (newQty > p.getin_stock()) {
-            throw new IllegalStateException(
+            throw new BusinessException(
                     "Lack of goods in stock. Available: " + p.getin_stock()
             );
         }
@@ -127,7 +128,7 @@ public class CartService {
     private Customer ensureCustomer(Long id) {
         Customer z = customerDao.find(requireNonNull(id));
         if (z == null){
-            throw new NoSuchElementException("Customer not found");
+            throw new NotFoundException("Customer", id);
         }
         return z;
     }
@@ -155,7 +156,7 @@ public class CartService {
     private Product ensureproduct(Long productId) {
         Product p = productDao.find(requireNonNull(productId));
         if (p == null){
-            throw new NoSuchElementException("Product not found");
+            throw new NotFoundException("Product", productId);
         }
         return p;
     }

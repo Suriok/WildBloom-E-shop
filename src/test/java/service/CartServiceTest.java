@@ -12,11 +12,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import start.model.*;
 import start.service.CartService;
+import start.service.exception.NotFoundException;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -207,7 +207,7 @@ public class CartServiceTest {
         when(customerDao.find(1L)).thenReturn(testCustomer);
         when(cartDao.findByCustomerWithItems(1L)).thenReturn(testCart);
         when(productDao.find(999L)).thenReturn(null);
-        assertThrows(NoSuchElementException.class,
+        assertThrows(NotFoundException.class,
                 () -> cartService.addItem(1L, 999L, 5));
     }
 
@@ -217,7 +217,7 @@ public class CartServiceTest {
         when(cartDao.findByCustomerWithItems(1L)).thenReturn(testCart);
         when(productDao.find(99L)).thenReturn(testProduct1);
         when(cartItemDao.findByCartAndProduct(eq(testCart), eq(testProduct1))).thenReturn(null);
-        assertThrows(NoSuchElementException.class,
+        assertThrows(NotFoundException.class,
                 () -> cartService.updateItemQuantity(1L, 99L, 10));
     }
 
