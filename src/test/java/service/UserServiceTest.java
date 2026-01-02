@@ -13,6 +13,7 @@ import start.dto.CreateEmployeeDto;
 import start.dto.UserDto;
 import start.model.*;
 import start.service.UserService;
+import start.service.exception.NotFoundException;
 
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -195,12 +196,12 @@ public class UserServiceTest {
     void getByEmail_WithNonExistingUser_ShouldThrow() {
         when(userDao.findByEmail("nonexistent@example.com")).thenReturn(null);
 
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
                 () -> userService.getByEmail("nonexistent@example.com")
         );
 
-        assertTrue(exception.getMessage().contains("User not found"));
+        assertTrue(exception.getMessage().contains("not found"));
         verify(userDao, times(1)).findByEmail("nonexistent@example.com");
     }
 
