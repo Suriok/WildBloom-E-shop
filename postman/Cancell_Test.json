@@ -1,0 +1,435 @@
+{
+	"info": {
+		"_postman_id": "ultimate-cancel-flow",
+		"name": "WildBloom: Order Cycle",
+		"description": "This test performs the following sequence of actions:\n1. Register a new user.\n2. Login to the system.\n3. Find a product and check stock availability.\n4. Add product to cart and verify price calculations.\n5. Create an order.\n6. Verify the cart is empty after ordering.\n7. Check order status and details.\n8. Cancel the order.\n9. Verify that a second cancellation attempt fails.\n10. Verify that the product stock is restored.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Register (Dynamic User)",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"const randomInt = Math.floor(Math.random() * 100000);",
+							"const email = `ultimate_tester_${randomInt}@example.com`;",
+							"const password = \"securePass123\";",
+							"",
+							"pm.collectionVariables.set(\"current_email\", email);",
+							"pm.collectionVariables.set(\"current_password\", password);",
+							"console.log(\"Generated User: \" + email);"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Registration successful (201)\", () => pm.response.to.have.status(201));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"Ultimate Tester\",\n    \"email\": \"{{current_email}}\",\n    \"password\": \"{{current_password}}\",\n    \"phone\": \"777666555\",\n    \"address\": \"Automation Street 1\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/auth/register",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"auth",
+						"register"
+					]
+				}
+			}
+		},
+		{
+			"name": "2. Login",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Login successful\", () => pm.expect(pm.response.code).to.be.oneOf([200, 302]));",
+							"pm.test(\"Cookie established\", () => pm.expect(pm.cookies.has('JSESSIONID')).to.be.true);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "username",
+							"value": "{{current_email}}",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "{{current_password}}",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{base_url}}/login",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"login"
+					]
+				}
+			}
+		},
+		{
+			"name": "3. Get Product (Stock Check)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const data = pm.response.json();",
+							"const product = data.find(p => p.in_stock > 0);",
+							"",
+							"if (product) {",
+							"    pm.collectionVariables.set(\"prod_id\", product.productId);",
+							"    pm.collectionVariables.set(\"initial_stock\", product.in_stock);",
+							"    pm.collectionVariables.set(\"prod_price\", product.price);",
+							"    console.log(`Product: ${product.name}, Stock: ${product.in_stock}`);",
+							"} else {",
+							"    pm.expect.fail(\"No stock available!\");",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/products",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"products"
+					]
+				}
+			}
+		},
+		{
+			"name": "4. Add to Cart & Verify Math",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+							"",
+							"const cart = pm.response.json();",
+							"const price = parseFloat(pm.collectionVariables.get(\"prod_price\"));",
+							"const amount = 1;",
+							"",
+							"const expectedSubtotal = price * amount;",
+							"const expectedVat = expectedSubtotal * 0.21;",
+							"const expectedTotal = expectedSubtotal + expectedVat + 50.00;",
+							"",
+							"pm.test(\"Cart Subtotal Correct\", () => pm.expect(cart.subtotal).to.eql(expectedSubtotal));",
+							"pm.test(\"Cart Total with VAT+Ship Correct\", () => pm.expect(cart.total).to.be.closeTo(expectedTotal, 0.01));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"productId\": {{prod_id}},\n    \"amount\": 1\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/cart/items",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"cart",
+						"items"
+					]
+				}
+			}
+		},
+		{
+			"name": "5. Create Order",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"if (!pm.response.headers.get(\"Content-Type\").includes(\"application/json\")) {",
+							"    pm.expect.fail(\"Server returned HTML (Login page?)\");",
+							"}",
+							"const order = pm.response.json();",
+							"pm.test(\"Order Created\", () => pm.response.to.have.status(200));",
+							"pm.collectionVariables.set(\"order_id\", order.orderId);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/orders",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"orders"
+					]
+				}
+			}
+		},
+		{
+			"name": "6. Verify Cart is Empty (Post-Order)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const cart = pm.response.json();",
+							"pm.test(\"Cart items count is 0\", () => pm.expect(cart.itemsCount).to.eql(0));",
+							"pm.test(\"Cart total is 0\", () => pm.expect(cart.total).to.eql(0));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/cart",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"cart"
+					]
+				}
+			}
+		},
+		{
+			"name": "7. Verify Order Details (Before Cancel)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const data = pm.response.json();",
+							"pm.test(\"Status is WAITING_FOR_CONFIRMATION\", () => {",
+							"    pm.expect(data.order.status).to.eql(\"WAITING_FOR_CONFIRMATION\");",
+							"});",
+							"pm.test(\"Contains correct product\", () => {",
+							"    const item = data.items.find(i => i.productId == pm.collectionVariables.get(\"prod_id\"));",
+							"    pm.expect(item).to.not.be.undefined;",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/orders/{{order_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"orders",
+						"{{order_id}}"
+					]
+				}
+			}
+		},
+		{
+			"name": "8. Cancel Order",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Cancelled Successfully (200)\", () => pm.response.to.have.status(200));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/orders/{{order_id}}/cancel",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"orders",
+						"{{order_id}}",
+						"cancel"
+					]
+				}
+			}
+		},
+		{
+			"name": "9. NEGATIVE: Try Double Cancel",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Double Cancel should fail (400 Bad Request)\", () => {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"pm.test(\"Error message is correct\", () => {",
+							"    pm.expect(pm.response.text()).to.include(\"Cancellation not allowed\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/orders/{{order_id}}/cancel",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"orders",
+						"{{order_id}}",
+						"cancel"
+					]
+				}
+			}
+		},
+		{
+			"name": "10. Verify Stock Returned",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const data = pm.response.json();",
+							"const prodId = pm.collectionVariables.get(\"prod_id\");",
+							"const initialStock = pm.collectionVariables.get(\"initial_stock\");",
+							"",
+							"const product = data.find(p => p.productId == prodId);",
+							"",
+							"pm.test(\"Stock completely restored\", function() {",
+							"    pm.expect(product.in_stock).to.eql(initialStock);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/products",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"products"
+					]
+				}
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "prod_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "order_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "initial_stock",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "current_email",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "current_password",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "prod_price",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
