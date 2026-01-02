@@ -1,0 +1,393 @@
+{
+    "info": {
+        "_postman_id": "b3e5512d-1234-4567-8900-abcdef123456",
+        "name": "WildBloom E-Shop: User Test",
+        "description": "This test performs the following sequence of actions:\n1. Register a new customer.\n2. Login to the system.\n3. Get the product list and validate the schema.\n4. Add items to the cart and verify mathematical calculations.\n5. Checkout and create an order.\n6. Verify the order details.\n7. Logout.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "1. Register Customer (Deep Check)",
+            "event": [
+                {
+                    "listen": "prerequest",
+                    "script": {
+                        "exec": [
+                            "const randomInt = Math.floor(Math.random() * 100000);",
+                            "const email = `deepcheck${randomInt}@example.com`;",
+                            "const password = \"HardPassword123!\";",
+                            "",
+                            "pm.collectionVariables.set(\"current_email\", email);",
+                            "pm.collectionVariables.set(\"current_password\", password);"
+                        ],
+                        "type": "text/javascript"
+                    }
+                },
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status is 201 Created\", () => pm.response.to.have.status(201));",
+                            "",
+                            "pm.test(\"Response time is acceptable (<1000ms)\", () => {",
+                            "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                            "});",
+                            "",
+                            "pm.test(\"Date header is present\", () => {",
+                            "    pm.response.to.have.header(\"Date\");",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"name\": \"Rigorous Tester\",\n    \"email\": \"{{current_email}}\",\n    \"password\": \"{{current_password}}\",\n    \"phone\": \"987654321\",\n    \"address\": \"Quality Assurance Blvd 1\"\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/auth/register",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "auth",
+                        "register"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "2. Login (Session Check)",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Login successful (200 or 302)\", () => {",
+                            "    pm.expect(pm.response.code).to.be.oneOf([200, 302]);",
+                            "});",
+                            "",
+                            "pm.test(\"Critical: JSESSIONID cookie received\", () => {",
+                            "    pm.expect(pm.cookies.has('JSESSIONID')).to.be.true;",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/x-www-form-urlencoded"
+                    }
+                ],
+                "body": {
+                    "mode": "urlencoded",
+                    "urlencoded": [
+                        {
+                            "key": "username",
+                            "value": "{{current_email}}",
+                            "type": "text"
+                        },
+                        {
+                            "key": "password",
+                            "value": "{{current_password}}",
+                            "type": "text"
+                        }
+                    ]
+                },
+                "url": {
+                    "raw": "{{base_url}}/login",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "login"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "3. Get Products (Schema Validation)",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                            "",
+                            "const jsonData = pm.response.json();",
+                            "",
+                            "pm.test(\"Product list is not empty\", () => pm.expect(jsonData.length).to.be.above(0));",
+                            "",
+                            "if (jsonData.length > 0) {",
+                            "    const product = jsonData[0];",
+                            "    ",
+                            "    pm.test(\"Product has correct schema\", () => {",
+                            "        pm.expect(product).to.have.property('productId').that.is.a('number');",
+                            "        pm.expect(product).to.have.property('name').that.is.a('string');",
+                            "        pm.expect(product).to.have.property('price').that.is.a('number');",
+                            "        pm.expect(product).to.have.property('in_stock').that.is.a('number');",
+                            "    });",
+                            "",
+                            "    pm.collectionVariables.set(\"product_id\", product.productId);",
+                            "    pm.collectionVariables.set(\"product_price\", product.price);",
+                            "    console.log(`Selected Product: ${product.name}, Price: ${product.price}`);",
+                            "}"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/api/products",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "products"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "4. Add to Cart & Verify Math",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                            "",
+                            "const cart = pm.response.json();",
+                            "const pricePerItem = parseFloat(pm.collectionVariables.get(\"product_price\"));",
+                            "const quantity = 2; // We are adding 2 items",
+                            "",
+                            "",
+                            "const expectedSubtotal = pricePerItem * quantity;",
+                            "const expectedVat = expectedSubtotal * 0.21;",
+                            "const expectedShipping = 50.00;",
+                            "const expectedTotal = expectedSubtotal + expectedVat + expectedShipping;",
+                            "",
+                            "const fmt = (n) => n.toFixed(2);",
+                            "",
+                            "pm.test(\"VERIFY: Subtotal calculation\", () => {",
+                            "    pm.expect(cart.subtotal).to.eql(parseFloat(fmt(expectedSubtotal)));",
+                            "});",
+                            "",
+                            "pm.test(\"VERIFY: VAT calculation (21%)\", () => {",
+                            "    pm.expect(cart.vat).to.be.closeTo(expectedVat, 0.01);",
+                            "});",
+                            "",
+                            "pm.test(\"VERIFY: Shipping cost (50.00)\", () => {",
+                            "    pm.expect(cart.shipping).to.eql(50.00);",
+                            "});",
+                            "",
+                            "pm.test(\"VERIFY: Grand Total\", () => {",
+                            "    pm.expect(cart.total).to.be.closeTo(expectedTotal, 0.01);",
+                            "});",
+                            "",
+                            "pm.test(\"Item count updated correctly\", () => {",
+                            "    pm.expect(cart.itemsCount).to.be.at.least(quantity);",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"productId\": {{product_id}},\n    \"amount\": 2\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/api/cart/items",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "cart",
+                        "items"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "5. Checkout (Consistency Check)",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status is 200 OK\", () => pm.response.to.have.status(200));",
+                            "",
+                            "const order = pm.response.json();",
+                            "",
+                            "pm.test(\"Response contains Order ID\", () => {",
+                            "    pm.expect(order).to.have.property('orderId');",
+                            "    pm.expect(order.orderId).to.be.a('number');",
+                            "});",
+                            "",
+                            "pm.test(\"Order customer matches logged-in user\", () => {",
+                            "    pm.expect(order.customerEmail).to.eql(pm.collectionVariables.get(\"current_email\"));",
+                            "});",
+                            "",
+                            "pm.test(\"Order has a valid status\", () => {",
+                            "    pm.expect(order.status).to.be.a('string');",
+                            "});",
+                            "",
+                            "pm.collectionVariables.set(\"order_id\", order.orderId);"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/api/orders",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "orders"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "6. Verify Order Detail (Cross-Check)",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                            "",
+                            "const data = pm.response.json();",
+                            "const savedProductId = pm.collectionVariables.get(\"product_id\");",
+                            "",
+                            "pm.test(\"Order Detail contains 'order' and 'items' objects\", () => {",
+                            "    pm.expect(data).to.have.property('order');",
+                            "    pm.expect(data).to.have.property('items');",
+                            "    pm.expect(data.items).to.be.an('array');",
+                            "});",
+                            "",
+                            "pm.test(\"The purchased product is present in the order\", () => {",
+                            "    const itemFound = data.items.find(i => i.productId === savedProductId);",
+                            "    pm.expect(itemFound).to.not.be.undefined;",
+                            "    pm.expect(itemFound.amount).to.eql(2); // We added 2 items in step 4",
+                            "});",
+                            "",
+                            "pm.test(\"Order Total is greater than zero\", () => {",
+                            "    pm.expect(data.order.totalAmount).to.be.above(0);",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/api/orders/{{order_id}}",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "orders",
+                        "{{order_id}}"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "7. Logout (Cleanup)",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Logout successful\", () => {",
+                            "    pm.expect(pm.response.code).to.be.oneOf([200, 302]);",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/logout",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "logout"
+                    ]
+                }
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:8080",
+            "type": "string"
+        },
+        {
+            "key": "current_email",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "current_password",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "product_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "product_price",
+            "value": "0",
+            "type": "string"
+        },
+        {
+            "key": "order_id",
+            "value": "",
+            "type": "string"
+        }
+    ]
+}
