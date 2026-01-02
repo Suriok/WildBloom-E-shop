@@ -1,0 +1,380 @@
+{
+    "info": {
+        "_postman_id": "b5c87612-1234-4321-abcd-1234567890ab",
+        "name": "WildBloom Order Test",
+        "description": "1. Authenticates as a Customer.\n2. Retrieves available products and selects one in stock.\n3. Adds the selected item to the cart.\n4. Creates a new order.\n5. Logs out the Customer.\n6. Authenticates as an Employee.\n7. Retrieves the details of the created order.\n8. Updates the order status to CONFIRMED.\n9. Verifies the final order status.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "1. Login as Customer (fff@gmail.com)",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Login successful\", function () {",
+                            "    pm.expect(pm.response.code).to.be.oneOf([200, 302]);",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/x-www-form-urlencoded"
+                    }
+                ],
+                "body": {
+                    "mode": "urlencoded",
+                    "urlencoded": [
+                        {
+                            "key": "username",
+                            "value": "fff@gmail.com",
+                            "type": "text"
+                        },
+                        {
+                            "key": "password",
+                            "value": "fff",
+                            "type": "text"
+                        }
+                    ]
+                },
+                "url": {
+                    "raw": "{{baseUrl}}/login",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "login"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "2. Get Products (Find Available)",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 200\", function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "var jsonData = pm.response.json();",
+                            "var product = jsonData.find(p => p.in_stock > 0);",
+                            "",
+                            "if (product) {",
+                            "    pm.collectionVariables.set(\"productId\", product.productId);",
+                            "    console.log(\"Selected Product ID: \" + product.productId);",
+                            "} else {",
+                            "    console.log(\"No products found!\");",
+                            "}"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{baseUrl}}/api/products",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "api",
+                        "products"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "3. Add Item to Cart",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Item added to cart\", function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"productId\": {{productId}},\n    \"amount\": 1\n}"
+                },
+                "url": {
+                    "raw": "{{baseUrl}}/api/cart/items",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "api",
+                        "cart",
+                        "items"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "4. Create Order",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Order created successfully\", function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "var jsonData = pm.response.json();",
+                            "if(jsonData.orderId) {",
+                            "    pm.collectionVariables.set(\"orderId\", jsonData.orderId);",
+                            "}"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                    "raw": "{{baseUrl}}/api/orders",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "api",
+                        "orders"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "5. Logout Customer",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Logout successful\", function () {",
+                            "    pm.expect(pm.response.code).to.be.oneOf([200, 302]);",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                    "raw": "{{baseUrl}}/logout",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "logout"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "6. Login as Employee",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Employee Login successful\", function () {",
+                            "    pm.expect(pm.response.code).to.be.oneOf([200, 302]);",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/x-www-form-urlencoded"
+                    }
+                ],
+                "body": {
+                    "mode": "urlencoded",
+                    "urlencoded": [
+                        {
+                            "key": "username",
+                            "value": "employee@wildbloom.cz",
+                            "type": "text"
+                        },
+                        {
+                            "key": "password",
+                            "value": "employee123",
+                            "type": "text"
+                        }
+                    ]
+                },
+                "url": {
+                    "raw": "{{baseUrl}}/login",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "login"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "7. Employee: Get Order Details",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Employee can see order\", function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "var jsonData = pm.response.json();",
+                            "pm.test(\"Verify Order ID\", function() {",
+                            "    pm.expect(jsonData.order.orderId).to.eql(pm.collectionVariables.get(\"orderId\"));",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{baseUrl}}/api/orders/{{orderId}}/details",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "api",
+                        "orders",
+                        "{{orderId}}",
+                        "details"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "8. Employee: Change Status to CONFIRMED",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status change successful\", function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "var jsonData = pm.response.json();",
+                            "pm.test(\"Status is CONFIRMED\", function() {",
+                            "    pm.expect(jsonData.status).to.eql(\"CONFIRMED\");",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "PATCH",
+                "header": [],
+                "url": {
+                    "raw": "{{baseUrl}}/api/orders/{{orderId}}/status?status=CONFIRMED",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "api",
+                        "orders",
+                        "{{orderId}}",
+                        "status"
+                    ],
+                    "query": [
+                        {
+                            "key": "status",
+                            "value": "CONFIRMED"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "9. Employee: Verify Final Status",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "var jsonData = pm.response.json();",
+                            "pm.test(\"Final check: Status is CONFIRMED\", function() {",
+                            "    pm.expect(jsonData.order.status).to.eql(\"CONFIRMED\");",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{baseUrl}}/api/orders/{{orderId}}/details",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "api",
+                        "orders",
+                        "{{orderId}}",
+                        "details"
+                    ]
+                }
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:8080",
+            "type": "string"
+        },
+        {
+            "key": "productId",
+            "value": ""
+        },
+        {
+            "key": "orderId",
+            "value": ""
+        }
+    ]
+}
