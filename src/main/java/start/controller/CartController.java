@@ -22,8 +22,8 @@ import java.util.Map;
 @RequestMapping("/api/cart")
 public class CartController {
 
-    private static final BigDecimal DPH_RATE = new BigDecimal("0.21");  // 21%
-    private static final BigDecimal SHIPPING = new BigDecimal("50.00"); // doprava
+    private static final BigDecimal DPH_RATE = new BigDecimal("0.21");
+    private static final BigDecimal SHIPPING = new BigDecimal("50.00");
     private final CartService cartService;
     private final UserService userService;
 

@@ -32,8 +32,6 @@ public class OrderController {
         this.userService = userService;
     }
 
-    // --- DTO Classes ---
-
     public static class OrderSummaryResponse {
         public Long orderId;
         public String date; // ISO
@@ -83,8 +81,6 @@ public class OrderController {
         }
     }
 
-    // --- Helper Methods ---
-
     private static OrderSummaryResponse toSummary(Order o) {
         String cName = "Guest";
         String cEmail = "No email";
@@ -123,8 +119,6 @@ public class OrderController {
         String email = principal.getName();
         return userService.getByEmail(email).getUserId();
     }
-
-    // --- API Endpoints ---
 
     @PostMapping
     @PreAuthorize("hasRole('CUSTOMER')")

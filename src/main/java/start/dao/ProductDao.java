@@ -40,9 +40,6 @@ public class ProductDao extends BaseDao<Product> {
             CriteriaQuery<Product> cq = cb.createQuery(Product.class);
             Root<Product> root = cq.from(Product.class);
 
-            Predicate catMatch = cb.equal(root.get(Product_.category), categoryArg);
-            Predicate stockMatch = cb.greaterThan(root.get(Product_.in_stock), 0);
-
             cq.where(cb.equal(root.get(Product_.category), categoryArg));
 
             return em.createQuery(cq).getResultList();

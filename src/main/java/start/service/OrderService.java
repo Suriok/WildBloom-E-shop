@@ -23,7 +23,7 @@ public class OrderService {
     private final OrderDao orderDao;
     private final OrderItemDao orderItemDao;
 
-    private static final BigDecimal DPH_RATE = new BigDecimal("0.21"); // 21%
+    private static final BigDecimal DPH_RATE = new BigDecimal("0.21");
     private static final BigDecimal DOrights = new BigDecimal("50.00");
 
     private static final Map<OrderStatus, Set<OrderStatus>> ALLOWED = new EnumMap<>(OrderStatus.class);
