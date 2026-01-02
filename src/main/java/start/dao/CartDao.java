@@ -12,18 +12,6 @@ public class CartDao extends BaseDao<Cart> {
 
     public CartDao() { super(Cart.class); }
 
-    public Cart findByCustomer(Customer customer) {
-        try {
-            return em.createQuery("SELECT k FROM Cart k WHERE k.customer = :z", Cart.class)
-                    .setParameter("z", customer)
-                    .getSingleResult();
-        } catch (NoResultException e) {
-            return null;
-        }catch (PersistenceException e) {
-            throw new DaoException("Error finding cart for customer" + customer, e);
-        }
-    }
-
     public Cart findByCustomerWithItems(Long customerId) {
         try {
             return em.createQuery("""

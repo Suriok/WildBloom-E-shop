@@ -14,20 +14,6 @@ public class OrderDao extends BaseDao<Order> {
 
     public OrderDao() { super(Order.class); }
 
-    public List<Order> findByStatusOrderByDateAsc(OrderStatus status) {
-        try{
-            return em.createQuery("""
-                SELECT o FROM Order o
-                WHERE o.status = :status
-                ORDER BY o.date ASC
-                """, Order.class)
-                .setParameter("status", status)
-                .getResultList();
-        }catch (PersistenceException e) {
-            throw new DaoException("Error finding orders by status " + status, e);
-        }
-    }
-
     public List<Order> findBycustomerId(Long customerId) {
         try {
             return em.createQuery("""

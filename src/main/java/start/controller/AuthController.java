@@ -19,14 +19,12 @@ public class AuthController {
         this.userService = userService;
     }
 
-    // public registration for CUSTOMER
     @PostMapping("/register")
     public ResponseEntity<Void> register(@RequestBody UserDto userDto) {
         userService.registerCustomer(userDto);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
-    // admin creates employee
     @PostMapping("/employees")
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<Void> createEmployee(@RequestBody CreateEmployeeDto dto) {
@@ -34,7 +32,6 @@ public class AuthController {
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
-    // admin creates another admin (optional but useful)
     @PostMapping("/admins")
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<Void> createAdmin(@RequestBody CreateAdministratorDto dto) {
