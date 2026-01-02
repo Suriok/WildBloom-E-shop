@@ -53,12 +53,13 @@ Frontend je tvořen statickými HTML stránkami s JavaScriptem (fetch na REST AP
 
 Pro lokální běh je potřeba nastavit (příklad):
 
-```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/wildbloom
-spring.datasource.username=your_username
-spring.datasource.password=your_password
-spring.datasource.driver-class-name=org.postgresql.Driver
-spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect```
+    ```properties
+    spring.datasource.url=jdbc:postgresql://localhost:5432/wildbloom
+    spring.datasource.username=your_username
+    spring.datasource.password=your_password
+    spring.datasource.driver-class-name=org.postgresql.Driver
+    spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
+    ```
 
 ## Vytvoření databáze (PostgreSQL)
 
@@ -66,6 +67,7 @@ Vytvořit DB např.:
 
 ```sql
 CREATE DATABASE wildbloom;
+```
 
 V projektu je aktuálně nastaven PostgreSQL datasource, takže pro lokální běh je potřeba upravit **URL/credentials**.
 
@@ -78,6 +80,7 @@ spring.datasource.url=jdbc:h2:mem:wildbloom
 spring.datasource.driver-class-name=org.h2.Driver
 spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
 spring.h2.console.enabled=true
+```
 
 H2 konzole: `http://localhost:8080/h2-console`  
 (JDBC URL: `jdbc:h2:mem:wildbloom`)
