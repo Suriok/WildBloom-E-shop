@@ -122,8 +122,6 @@ public class CartController {
         return new CartResponse(cart.getcartId(), items, count, subtotal, vat, shipping, total);
     }
 
-    //  DTOs
-
     public static class AddItemRequest {
         public Long productId;
         public Integer amount;

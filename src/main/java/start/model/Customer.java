@@ -8,15 +8,15 @@ import java.util.Date;
 @Table(name = "customer")
 public class Customer extends User {
     @Temporal(TemporalType.DATE)
-    private Date dateRegistrace;
+    private Date registrationDate;
 
     @OneToOne(mappedBy = "customer", cascade = CascadeType.PERSIST, orphanRemoval = true, fetch = FetchType.LAZY)
     private Cart cart;
 
     public Customer() {}
 
-    public Date getdateRegistrace() { return dateRegistrace; }
-    public void setdateRegistrace(Date dateRegistrace) { this.dateRegistrace = dateRegistrace; }
+    public Date getRegistrationDate() { return registrationDate; }
+    public void setRegistrationDate(Date registrationDate) { this.registrationDate = registrationDate; }
     public Cart getCart() { return cart; }
     public void setCart(Cart cart) { this.cart = cart; }
 }

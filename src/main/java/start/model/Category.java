@@ -24,12 +24,12 @@ public class Category {
     @OneToMany(mappedBy = "category", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @OrderBy("name ASC")
     @com.fasterxml.jackson.annotation.JsonIgnore
-    private List<Product> producty = new ArrayList<>();
+    private List<Product> products = new ArrayList<>();
 
     public Category() {}
 
     public Long getCategoryId() { return categoryId; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
-    public List<Product> getproducty() { return producty; }
+    public List<Product> getProducts() { return products; }
 }

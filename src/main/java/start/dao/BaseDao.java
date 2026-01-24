@@ -25,7 +25,7 @@ public abstract class BaseDao<T> {
         try {
             return em.find(type, id);
         } catch (PersistenceException e) {
-            throw new DaoException("Chyba při hledání entity " + type.getSimpleName() + " s id " + id, e);
+            throw new DaoException("Error finding entity " + type.getSimpleName() + " with id " + id, e);
         }
     }
 
@@ -34,7 +34,7 @@ public abstract class BaseDao<T> {
             return em.createQuery("SELECT e FROM " + type.getSimpleName() + " e", type)
                     .getResultList();
         } catch (PersistenceException e) {
-            throw new DaoException("Chyba při načítání seznamu entit " + type.getSimpleName(), e);
+            throw new DaoException("Error loading entities list " + type.getSimpleName(), e);
         }
     }
 
@@ -44,7 +44,7 @@ public abstract class BaseDao<T> {
         try {
             em.persist(entity);
         } catch (PersistenceException e) {
-            throw new DaoException("Nepodařilo se uložit entitu " + entity, e);
+            throw new DaoException("Failed to persist entity " + entity, e);
         }
     }
 
@@ -54,7 +54,7 @@ public abstract class BaseDao<T> {
         try {
             return em.merge(entity);
         } catch (PersistenceException e) {
-            throw new DaoException("Nepodařilo se aktualizovat entitu " + entity, e);
+            throw new DaoException("Failed to update entity " + entity, e);
         }
     }
 
@@ -64,7 +64,7 @@ public abstract class BaseDao<T> {
         try {
             em.remove(em.contains(entity) ? entity : em.merge(entity));
         } catch (PersistenceException e) {
-            throw new DaoException("Nepodařilo se smazat entitu " + entity, e);
+            throw new DaoException("Failed to delete entity " + entity, e);
         }
     }
 }

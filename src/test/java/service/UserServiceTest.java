@@ -96,7 +96,7 @@ public class UserServiceTest {
             Customer c = (Customer) customer;
             return c.getCart() != null && 
                    c.getRole() == UserRole.CUSTOMER &&
-                   c.getdateRegistrace() != null;
+                   c.getRegistrationDate() != null;
         }));
     }
 
@@ -136,7 +136,7 @@ public class UserServiceTest {
             Employee e = (Employee) employee;
             return e.getRole() == UserRole.EMPLOYEE &&
                    e.getPosition().equals(testEmployeeDto.getPosition()) &&
-                   e.getdateNastupu() != null;
+                   e.getEmploymentStartDate() != null;
         }));
     }
 

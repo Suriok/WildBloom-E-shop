@@ -51,7 +51,7 @@ public class DefaultUsersInitializer implements CommandLineRunner {
             e.setPassword(passwordEncoder.encode("employee123"));
             e.setRole(UserRole.EMPLOYEE);
             e.setPosition("Order Manager");
-            e.setdateNastupu(new Date());
+            e.setEmploymentStartDate(new Date());
             employeeDao.persist(e);
         }
     }
