@@ -45,7 +45,7 @@ public class OrderServiceTest {
         testCustomer.setName("John Doe");
         testCustomer.setPassword("password");
         testCustomer.setRole(UserRole.CUSTOMER);
-        testCustomer.setdateRegistrace(new Date());
+        testCustomer.setRegistrationDate(new Date());
 
         testCart = new Cart();
         testCart.setcartId(1L);

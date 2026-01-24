@@ -17,5 +17,5 @@ public class Employee extends User {
     public String getPosition() { return position; }
     public void setPosition(String position) { this.position = position; }
     public Date getEmploymentStartDate() { return employmentStartDate; }
-    public void setEmploymentStartDate(Date dateNastupu) { this.employmentStartDate = dateNastupu; }
+    public void setEmploymentStartDate(Date employmentStartDate) { this.employmentStartDate = employmentStartDate; }
 }

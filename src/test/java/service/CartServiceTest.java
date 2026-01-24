@@ -44,7 +44,7 @@ public class CartServiceTest {
         testCustomer.setName("Test User");
         testCustomer.setPassword("password");
         testCustomer.setRole(UserRole.CUSTOMER);
-        testCustomer.setdateRegistrace(new Date());
+        testCustomer.setRegistrationDate(new Date());
 
         testCart = new Cart();
         testCart.setcartId(1L);

@@ -49,7 +49,7 @@ public class UserService {
         customer.setPhone(dto.getPhone());
         customer.setAddress(dto.getAddress());
         customer.setRole(UserRole.CUSTOMER);
-        customer.setdateRegistrace(new Date());
+        customer.setRegistrationDate(new Date());
 
         Cart cart = new Cart();
         cart.setCustomer(customer);

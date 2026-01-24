@@ -96,7 +96,7 @@ public class UserServiceTest {
             Customer c = (Customer) customer;
             return c.getCart() != null && 
                    c.getRole() == UserRole.CUSTOMER &&
-                   c.getdateRegistrace() != null;
+                   c.getRegistrationDate() != null;
         }));
     }
 
