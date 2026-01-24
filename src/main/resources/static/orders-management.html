@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WildBloom - Orders Management</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
 </head>
 <body class="bg-gray-50 min-h-screen font-sans text-gray-800">
 
@@ -13,14 +17,9 @@
         <div class="flex justify-between items-center py-4">
             <div class="flex items-center gap-2">
                 <h1 class="text-2xl font-bold text-green-600 tracking-tight">WildBloom 🌸</h1>
-                <span id="roleBadge"
-                      class="bg-gray-100 text-gray-500 text-xs px-2 py-1 rounded-full uppercase font-semibold tracking-wide">
-                    Staff
-                </span>
-
+                <span id="roleBadge" class="bg-gray-100 text-gray-500 text-xs px-2 py-1 rounded-full uppercase font-semibold tracking-wide">Staff</span>
             </div>
-
-            <form id="logoutForm"  method="post" action="/logout">
+            <form id="logoutForm" method="post" action="/logout">
                 <button class="text-gray-700 hover:text-green-600 font-medium py-2">Logout</button>
             </form>
         </div>
@@ -29,13 +28,8 @@
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
     <div class="bg-white p-2 rounded-xl shadow-sm inline-flex gap-2 border border-gray-100">
-        <a id="inventoryLink"
-           href="admin.html"
-           class="hidden px-6 py-2.5 rounded-lg text-gray-600 font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
-            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-            </svg>
+        <a id="inventoryLink" href="admin.html" class="hidden px-6 py-2.5 rounded-lg text-gray-600 font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
+            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
             Inventory
         </a>
         <a href="orders-management.html" class="px-6 py-2.5 rounded-lg bg-green-600 text-white font-medium shadow-md flex items-center gap-2">
@@ -46,9 +40,7 @@
 </div>
 
 <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 fade-in">
-
     <div class="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
-
         <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
             <div>
                 <h2 class="text-xl font-bold text-gray-800">Customer Orders</h2>
@@ -67,50 +59,33 @@
                     <th class="px-6 py-4 font-semibold">Order ID</th>
                     <th class="px-6 py-4 font-semibold">Date</th>
                     <th class="px-6 py-4 font-semibold">Customer</th>
-                    <th class="px-6 py-4 font-semibold">Total Price</th>
+                    <th class="px-6 py-4 font-semibold">Total Amount</th>
                     <th class="px-6 py-4 font-semibold">Status</th>
                     <th class="px-6 py-4 font-semibold text-right">Actions</th>
                 </tr>
                 </thead>
                 <tbody id="ordersTableBody" class="divide-y divide-gray-100">
-                <tr>
-                    <td colspan="6" class="px-6 py-12 text-center text-gray-500">
-                        <div class="flex flex-col items-center justify-center">
-                            <svg class="w-12 h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                            <p>No orders found or loading...</p>
-                        </div>
-                    </td>
-                </tr>
                 </tbody>
             </table>
         </div>
-
-        <div class="bg-gray-50 px-6 py-4 border-t border-gray-100 flex justify-end">
-            <span class="text-xs text-gray-400">Showing recent orders</span>
-        </div>
     </div>
-    <div id="detailsModal" class="hidden fixed inset-0 bg-black/40 flex items-center justify-center p-4">
+
+    <div id="detailsModal" class="hidden fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-[60]">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-6">
             <div class="flex items-start justify-between gap-4">
                 <div>
-                    <h3 class="text-xl font-bold text-gray-900">Order details</h3>
+                    <h3 class="text-xl font-bold text-gray-900">Order Details</h3>
                     <p id="detailsHeader" class="text-sm text-gray-600 mt-1"></p>
                 </div>
-                <button
-                        onclick="closeDetails()"
-                        class="px-3 py-2 rounded-lg border border-red-200 text-red-700 bg-red-50 hover:bg-red-100 hover:border-red-300 transition">
-                    Close
-                </button>
-
+                <button onclick="closeDetails()" class="px-3 py-2 rounded-lg border border-red-200 text-red-700 bg-red-50 hover:bg-red-100 transition">Close</button>
             </div>
-
-            <div id="detailsBody" class="mt-4 text-sm text-gray-700">
-                Loading...
-            </div>
+            <div id="detailsBody" class="mt-4 text-sm text-gray-700 font-mono bg-gray-50 p-4 rounded-xl">Loading details...</div>
         </div>
     </div>
-
 </main>
+
+<div id="messageBox" class="fixed bottom-5 right-5 z-[100] flex flex-col gap-3 w-80 pointer-events-none">
+</div>
 
 <script>
     const NEXT = {
@@ -134,217 +109,130 @@
 
     function fmtMoney(v) {
         const n = Number(v);
-        if (Number.isFinite(n)) return n.toFixed(2);
-        return (v ?? "0.00");
+        return Number.isFinite(n) ? n.toFixed(2) : (v ?? "0.00");
     }
 
     async function loadOrders() {
         const tbody = document.getElementById("ordersTableBody");
-        tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">Refreshing...</td></tr>`;
-
         try {
-            const res = await fetch("/api/orders", { credentials: "same-origin" });
-            if (!res.ok) {
-                const t = await res.text();
-                throw new Error(`HTTP ${res.status} ${t}`);
-            }
-
+            const res = await fetch("/api/orders");
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const orders = await res.json();
             tbody.innerHTML = "";
-
-            if (!orders || orders.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-10 text-center text-gray-500">No orders found.</td></tr>`;
-                return;
-            }
-
             orders.forEach(order => {
-                const dateStr = order.date ? new Date(order.date).toLocaleString() : "-";
-                const status = order.status;
-                const statusClass = statusPillClass(status);
-
-                const next = NEXT[status] || [];
+                const statusClass = statusPillClass(order.status);
+                const next = NEXT[order.status] || [];
                 const canChange = next.length > 0;
+                const options = `<option value="${order.status}" selected>${order.status}</option>` +
+                    next.map(s => `<option value="${s}">${s}</option>`).join("");
 
-                const options = [
-                    `<option value="${status}" selected>${status}</option>`,
-                    ...next.map(s => `<option value="${s}">${s}</option>`)
-                ].join("");
-
-                const row = `
-          <tr class="hover:bg-gray-50 transition-colors">
-            <td class="px-6 py-4 text-sm font-medium text-gray-900">#${order.orderId}</td>
-            <td class="px-6 py-4 text-sm text-gray-600">${dateStr}</td>
-
-            <td class="px-6 py-4">
-              <div class="text-sm font-bold text-gray-900">${order.customerName || "Unknown"}</div>
-              <div class="text-xs text-gray-500">${order.customerEmail || ""}</div>
-            </td>
-
-            <td class="px-6 py-4 text-sm font-bold text-green-600">${fmtMoney(order.totalAmount)} CZK</td>
-
-            <td class="px-6 py-4">
-              <span class="px-3 py-1 rounded-full text-xs font-semibold ${statusClass}">
-                ${status}
-              </span>
-
-              <div class="mt-2 flex items-center gap-2">
-                <select id="st-${order.orderId}"
-                        class="text-xs border border-gray-200 rounded-lg px-2 py-1 ${canChange ? "" : "opacity-50"}"
-                        ${canChange ? "" : "disabled"}>
-                  ${options}
-                </select>
-
-                <button onclick="changeStatus(${order.orderId})"
-                        class="text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors
-                          ${canChange
-                    ? "bg-white text-gray-700 border-gray-200 hover:border-green-500 hover:text-green-600"
-                    : "bg-gray-50 text-gray-400 border-gray-100 cursor-not-allowed"}"
-                        ${canChange ? "" : "disabled"}>
-                  Update
-                </button>
-              </div>
-            </td>
-
-            <td class="px-6 py-4 text-right">
-              <button onclick="viewDetails(${order.orderId})"
-                      class="text-xs font-semibold bg-green-50 text-green-700 px-3 py-1.5 rounded-lg hover:bg-green-100 border border-green-200 transition-colors">
-                View Details
-              </button>
-            </td>
-          </tr>
-        `;
-                tbody.insertAdjacentHTML("beforeend", row);
+                tbody.insertAdjacentHTML("beforeend", `
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 font-medium text-gray-900">#${order.orderId}</td>
+                        <td class="px-6 py-4 text-sm text-gray-600">${new Date(order.date).toLocaleString()}</td>
+                        <td class="px-6 py-4">
+                            <div class="font-bold text-gray-900">${order.customerName}</div>
+                            <div class="text-xs text-gray-500">${order.customerEmail}</div>
+                        </td>
+                        <td class="px-6 py-4 font-bold text-green-600">${fmtMoney(order.totalAmount)} CZK</td>
+                        <td class="px-6 py-4">
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold ${statusClass}">${order.status}</span>
+                            <div class="mt-2 flex gap-2">
+                                <select id="st-${order.orderId}" class="text-xs border rounded-lg px-2 py-1" ${canChange ? "" : "disabled"}>${options}</select>
+                                <button onclick="changeStatus(${order.orderId})" class="text-xs font-semibold px-2 py-1 rounded bg-white border border-gray-200 hover:border-green-500 transition" ${canChange ? "" : "disabled"}>Update</button>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <button onclick="viewDetails(${order.orderId})" class="text-xs font-semibold bg-green-50 text-green-700 px-3 py-1.5 rounded-lg border border-green-200 hover:bg-green-100 transition">View Details</button>
+                        </td>
+                    </tr>
+                `);
             });
-
         } catch (e) {
-            console.error(e);
-            tbody.innerHTML = `
-        <tr>
-          <td colspan="6" class="px-6 py-8 text-center text-red-500">
-            Error loading orders: ${e.message}
-          </td>
-        </tr>
-      `;
+            tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-red-500">Error: ${e.message}</td></tr>`;
         }
     }
-
-    async function initRoleUI() {
-        try {
-            const res = await fetch('/api/orders/whoami');
-            if (!res.ok) throw new Error('whoami failed');
-
-            const me = await res.json();
-
-            const badge = document.getElementById('roleBadge');
-            const inv = document.getElementById('inventoryLink');
-
-            if (me.role === 'ADMINISTRATOR') {
-                badge.textContent = 'Admin';
-                inv.classList.remove('hidden');
-            } else {
-                badge.textContent = 'Employee';
-            }
-        } catch (e) {
-            console.error(e);
-        }
-    }
-
-    initRoleUI();
-    loadOrders();
 
     async function changeStatus(orderId) {
-        const sel = document.getElementById(`st-${orderId}`);
-        const status = sel.value;
-
+        const status = document.getElementById(`st-${orderId}`).value;
         try {
-            const res = await fetch(`/api/orders/${orderId}/status?status=${encodeURIComponent(status)}`, {
-                method: 'PATCH'
-            });
-
-            if (!res.ok) {
-                const t = await res.text();
-                throw new Error(t || res.status);
-            }
-
+            const res = await fetch(`/api/orders/${orderId}/status?status=${encodeURIComponent(status)}`, { method: 'PATCH' });
+            if (!res.ok) throw new Error(await res.text());
             await loadOrders();
-        } catch (e) {
-            alert("Cannot change status: " + e.message);
-        }
-    }
-    window.changeStatus = changeStatus;
-
-
-    function closeDetails() {
-        document.getElementById('detailsModal').classList.add('hidden');
+        } catch (e) { alert("Action failed: " + e.message); }
     }
 
     async function viewDetails(orderId) {
         const modal = document.getElementById('detailsModal');
-        const header = document.getElementById('detailsHeader');
         const body = document.getElementById('detailsBody');
-
         modal.classList.remove('hidden');
-        header.textContent = `#${orderId}`;
-        body.innerHTML = 'Loading...';
-
+        body.innerHTML = 'Loading order data...';
         try {
             const res = await fetch(`/api/orders/${orderId}/details`);
-            if (!res.ok) {
-                const t = await res.text();
-                throw new Error(t || res.status);
-            }
             const data = await res.json();
-
-            const o = data.order;
-            const items = data.items || [];
-
-            header.textContent = `Order #${o.orderId} • ${o.customerName} (${o.customerEmail}) • Status: ${o.status}`;
-
-            if (items.length === 0) {
-                body.innerHTML = `<div class="text-gray-500">No items.</div>`;
-                return;
-            }
-
-            body.innerHTML = `
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead>
-              <tr class="text-left text-gray-500">
-                <th class="py-2">Product</th>
-                <th class="py-2">Qty</th>
-                <th class="py-2">Price</th>
-                <th class="py-2">Line total</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${items.map(it => `
-                <tr class="border-t">
-                  <td class="py-2">${it.name}</td>
-                  <td class="py-2">${it.amount}</td>
-                  <td class="py-2">${it.price} CZK</td>
-                  <td class="py-2 font-semibold">${it.lineTotal} CZK</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-
-        <div class="mt-4 flex justify-end text-sm">
-          <div class="space-y-1">
-            <div class="flex justify-between gap-8"><span class="text-gray-600">DPH</span><span class="font-semibold">${o.dph ?? 0} CZK</span></div>
-            <div class="flex justify-between gap-8"><span class="text-gray-600">Shipping</span><span class="font-semibold">${o.dorights ?? 0} CZK</span></div>
-            <div class="flex justify-between gap-8 border-t pt-2"><span class="font-bold">Total</span><span class="font-bold text-green-700">${o.totalAmount ?? 0} CZK</span></div>
-          </div>
-        </div>
-      `;
-        } catch (e) {
-            body.innerHTML = `<div class="text-red-600">Error: ${e.message}</div>`;
-        }
+            document.getElementById('detailsHeader').textContent = `Order #${orderId} - Customer: ${data.order.customerName}`;
+            body.innerHTML = `<pre class="whitespace-pre-wrap">${JSON.stringify(data.items, null, 2)}</pre>`;
+        } catch (e) { body.innerHTML = "Error loading details: " + e.message; }
     }
 
-    window.viewDetails = viewDetails;
-    window.closeDetails = closeDetails;
+    function closeDetails() { document.getElementById('detailsModal').classList.add('hidden'); }
 
+    // WEBSOCKET NOTIFICATION LOGIC
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const socket = new WebSocket(`${protocol}//${window.location.host}/ws`);
+
+    socket.onmessage = function(event) {
+        const messageBox = document.getElementById('messageBox');
+        let orderId = "Unknown";
+        let status = "Updated";
+
+        try {
+            const data = JSON.parse(event.data);
+            orderId = data.orderId;
+            status = data.status;
+        } catch(e) {
+            console.error("Non-JSON message received:", event.data);
+        }
+
+        const toast = document.createElement('div');
+        toast.className = "pointer-events-auto bg-white border-l-4 border-green-500 shadow-2xl rounded-xl p-4 flex items-start justify-between transform transition-all duration-500 translate-x-full opacity-0";
+        toast.innerHTML = `
+            <div class="flex-1">
+                <p class="text-xs font-bold text-green-600 uppercase tracking-widest">Live Update</p>
+                <p class="text-sm text-gray-700 mt-1">Order <strong>#${orderId}</strong> status changed to <span class="font-semibold">${status}</span></p>
+            </div>
+            <button onclick="this.parentElement.remove()" class="ml-4 text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
+        `;
+
+        messageBox.prepend(toast);
+
+        // Animation entry
+        setTimeout(() => toast.classList.remove('translate-x-full', 'opacity-0'), 10);
+
+        // Auto-remove after 10 seconds
+        setTimeout(() => {
+            toast.classList.add('opacity-0', 'translate-x-full');
+            setTimeout(() => toast.remove(), 500);
+        }, 10000);
+
+        // Automatically refresh table
+        if (typeof loadOrders === 'function') loadOrders();
+    };
+
+    socket.onopen = () => console.log('WebSocket Connected');
+    socket.onclose = () => console.log('WebSocket Disconnected');
+
+    // Initial Load
+    loadOrders();
+
+    // User Role Detection
+    (async () => {
+        try {
+            const me = await (await fetch('/api/orders/whoami')).json();
+            document.getElementById('roleBadge').textContent = me.role;
+            if (me.role === 'ADMINISTRATOR') document.getElementById('inventoryLink').classList.remove('hidden');
+        } catch(e) { console.error("Identity check failed"); }
+    })();
 </script>
 
 </body>

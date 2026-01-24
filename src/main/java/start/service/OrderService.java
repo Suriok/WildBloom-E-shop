@@ -7,6 +7,7 @@ import start.dao.*;
 import start.model.*;
 import start.service.exception.BusinessException;
 import start.service.exception.NotFoundException;
+import start.config.WebSocketHandler;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -22,6 +23,7 @@ public class OrderService {
     private final ProductDao productDao;
     private final OrderDao orderDao;
     private final OrderItemDao orderItemDao;
+    private final WebSocketHandler webSocketHandler;
 
     private static final BigDecimal DPH_RATE = new BigDecimal("0.21");
     private static final BigDecimal DOrights = new BigDecimal("50.00");
@@ -35,12 +37,13 @@ public class OrderService {
         ALLOWED.put(OrderStatus.CANCELLED, Set.of());
     }
 
-    public OrderService(CustomerDao customerDao, CartDao cartDao, ProductDao productDao, OrderDao orderDao, OrderItemDao orderItemDao) {
+    public OrderService(CustomerDao customerDao, CartDao cartDao, ProductDao productDao, OrderDao orderDao, OrderItemDao orderItemDao, WebSocketHandler webSocketHandler) {
         this.customerDao = customerDao;
         this.cartDao = cartDao;
         this.productDao = productDao;
         this.orderDao = orderDao;
         this.orderItemDao = orderItemDao;
+        this.webSocketHandler = webSocketHandler;
     }
 
     @Transactional
@@ -138,6 +141,9 @@ public class OrderService {
             throw new BusinessException("Invalid status transition: " + from + " -> " + newStatus);
         }
         o.setstatus(newStatus);
+        
+        webSocketHandler.sendOrderStatusUpdate(o.getorderId().toString(), newStatus.name());
+
         return orderDao.update(o);
     }
 
