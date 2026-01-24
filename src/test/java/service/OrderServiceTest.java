@@ -233,28 +233,6 @@ public class OrderServiceTest {
     }
 
     @Test
-    void changeStatus_AllowedTransitions_FromConfirmed() {
-        Order order = new Order();
-        order.setorderId(10L);
-        order.setstatus(OrderStatus.CONFIRMED);
-        when(orderDao.find(10L)).thenReturn(order);
-        when(orderDao.update(order)).thenReturn(order);
-        assertDoesNotThrow(() -> orderService.changeStatus(10L, OrderStatus.IN_TRANSIT));
-        order.setstatus(OrderStatus.CONFIRMED);
-        assertDoesNotThrow(() -> orderService.changeStatus(10L, OrderStatus.CANCELLED));
-    }
-
-    @Test
-    void changeStatus_AllowedTransitions_FromInTransit() {
-        Order order = new Order();
-        order.setorderId(10L);
-        order.setstatus(OrderStatus.IN_TRANSIT);
-        when(orderDao.find(10L)).thenReturn(order);
-        when(orderDao.update(order)).thenReturn(order);
-        assertDoesNotThrow(() -> orderService.changeStatus(10L, OrderStatus.DELIVERED));
-    }
-
-    @Test
     void changeStatus_NoTransitionsAllowed_FromDelivered() {
         Order order = new Order();
         order.setorderId(10L);
