@@ -72,7 +72,7 @@ public class UserService {
         e.setAddress(dto.getAddress());
         e.setRole(UserRole.EMPLOYEE);
         e.setPosition(dto.getPosition());
-        e.setdateNastupu(new Date());
+        e.setEmploymentStartDate(new Date());
 
         employeeDao.persist(e);
     }

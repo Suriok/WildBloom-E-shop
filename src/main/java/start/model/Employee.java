@@ -10,12 +10,12 @@ public class Employee extends User {
     private String position;
 
     @Temporal(TemporalType.DATE)
-    private Date dateNastupu;
+    private Date employmentStartDate;
 
     public Employee() {}
 
     public String getPosition() { return position; }
     public void setPosition(String position) { this.position = position; }
-    public Date getdateNastupu() { return dateNastupu; }
-    public void setdateNastupu(Date dateNastupu) { this.dateNastupu = dateNastupu; }
+    public Date getEmploymentStartDate() { return employmentStartDate; }
+    public void setEmploymentStartDate(Date dateNastupu) { this.employmentStartDate = dateNastupu; }
 }

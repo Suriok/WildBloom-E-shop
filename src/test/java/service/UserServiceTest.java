@@ -136,7 +136,7 @@ public class UserServiceTest {
             Employee e = (Employee) employee;
             return e.getRole() == UserRole.EMPLOYEE &&
                    e.getPosition().equals(testEmployeeDto.getPosition()) &&
-                   e.getdateNastupu() != null;
+                   e.getEmploymentStartDate() != null;
         }));
     }
 
