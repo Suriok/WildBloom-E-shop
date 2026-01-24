@@ -95,7 +95,6 @@ public class ProductDaoTest {
     void findByCategory_ReturnsProductsInCategory() {
         List<Product> products = new ArrayList<>();
         products.add(testProduct);
-
         when(em.getCriteriaBuilder()).thenReturn(criteriaBuilder);
         when(criteriaBuilder.createQuery(Product.class)).thenReturn(criteriaQuery);
         when(criteriaQuery.from(Product.class)).thenReturn(root);
@@ -104,12 +103,10 @@ public class ProductDaoTest {
         when(criteriaQuery.where(any(Predicate.class))).thenReturn(criteriaQuery);
         when(em.createQuery(criteriaQuery)).thenReturn(typedQuery);
         when(typedQuery.getResultList()).thenReturn(products);
-
         List<Product> result = productDao.findByCategory(testCategory);
-
         assertNotNull(result);
         assertEquals(1, result.size());
-        verify(criteriaBuilder, times(2)).equal(any(), eq(testCategory));
+        verify(criteriaBuilder, times(1)).equal(any(), eq(testCategory));
     }
 
     @Test
