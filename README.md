@@ -1,7 +1,5 @@
 # Dokumentace k projektu WildBloom
 
-Repozitář GitLab: https://gitlab.fel.cvut.cz/B251_B6B36EAR/golyakat.git
-
 ## Popis aplikace
 
 WildBloom je webová aplikace typu e-shop pro prodej květin a kytic. Uživatel si může prohlížet produkty podle kategorií, zobrazit detail produktu a vytvořit objednávku. Aplikace zároveň obsahuje administrační část pro správu katalogu a zpracování objednávek.
@@ -243,3 +241,4 @@ Doporučeno **H2** (nejrychlejší) nebo lokální **PostgreSQL**.
 
 - **Problém:** v DB máme roli např. `EMPLOYEE`, ale Spring Security porovnává autority typicky jako `ROLE_EMPLOYEE`. Když se to nesladí, přijdou 403/403 nebo “uživatel nemá roli”.
 - **Řešení:** v `UserDetailsService` jsme mapovali roli na `ROLE_<ROLE>` a zároveň v `@PreAuthorize` / konfiguraci používali konzistentní názvy rolí.
+
