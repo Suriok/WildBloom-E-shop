@@ -5,19 +5,16 @@ A full-stack e-commerce web application for a flower shop, built with **Java, Sp
 WildBloom is a layered web application that combines a secure backend, role-based access control, business workflow logic, and a responsive frontend for customers and administrators.
 
 
-
 ## Overview
 
-WildBloom is an online flower shop application where users can browse products, manage a shopping cart, and place orders.  
-The system also includes administrative functionality for managing products, categories, users, and order processing.
+WildBloom is a full-stack e-commerce application for a flower shop. Users can browse products, manage a shopping cart, and place orders, while administrators can manage products, categories, users, and order processing.
 
-This project demonstrates practical full-stack development skills, including:
-
+This project demonstrates:
 - REST API design
 - layered backend architecture
 - role-based access control
 - relational database integration
-- business logic implementation
+- business workflow implementation
 - testing and validation
 
 
